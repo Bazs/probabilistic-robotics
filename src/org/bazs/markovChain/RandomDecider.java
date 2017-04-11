@@ -1,5 +1,6 @@
 package org.bazs.markovChain;
 
+import java.util.AbstractMap.SimpleEntry;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
@@ -53,44 +54,51 @@ public class RandomDecider<Decision extends Enum<Decision>>
 
    private List<Decision> extractDecisionsInAscendingProbability(Map<Decision, Double> decisionProbabilities)
    {
-      // @foff
       return decisionProbabilities.entrySet().stream()
             .sorted((e1, e2) -> Double.compare(e1.getValue(), e2.getValue()))
             .map(e -> e.getKey())
             .collect(Collectors.toList());
-      // @fon
    }
 
    private List<Double> buildDecisionProbabilityCumulativeSums(Map<Decision, Double> decisionProbabilities,
          List<Decision> sortedDecisions)
    {
-      // @foff
       List<Double> sortedProbabilities = IntStream.range(0, sortedDecisions.size())
             .mapToObj(i -> decisionProbabilities.get(sortedDecisions.get(i)))
             .collect(Collectors.toList());
 
       DoubleAdder adder = new DoubleAdder();
-      return sortedProbabilities.stream().
-            map(p -> 
+      return sortedProbabilities.stream()
+            .map(p ->
             {
                adder.add(p);
                return adder.doubleValue();
             })
             .collect(Collectors.toList());
-      // @fon
    }
 
    public Decision nextDecision()
    {
       double randomDouble = _random.nextDouble();
 
-      // @foff
       int decisionIdx = IntStream.range(0, _decisionLowerLimits.size())
             .filter(i -> _decisionLowerLimits.get(i) > randomDouble)
             .findFirst()
             .getAsInt();
-      // @fon
 
       return _decisionsInAscendingProbability.get(decisionIdx);
+   }
+
+   public Map<Decision, Double> getDecisionProbabilities()
+   {
+      Map<Decision, Double> decisionProbabilities = IntStream.range(1, _decisionsInAscendingProbability.size())
+            .mapToObj(i -> new SimpleEntry<>(
+                  _decisionsInAscendingProbability.get(i),
+                  _decisionLowerLimits.get(i) - _decisionLowerLimits.get(i - 1)))
+            .collect(Collectors.toMap(e -> e.getKey(), e -> e.getValue()));
+
+      decisionProbabilities.put(_decisionsInAscendingProbability.get(0), _decisionLowerLimits.get(0));
+
+      return decisionProbabilities;
    }
 }

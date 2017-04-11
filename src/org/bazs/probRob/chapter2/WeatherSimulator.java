@@ -61,6 +61,8 @@ public class WeatherSimulator
 
    public static void main(String[] args)
    {
+      SUNNY_DECIDER.getDecisionProbabilities();
+
       MarkovChain<Weather> weatherChain = new MarkovChain<Weather>(E_SUNNY, TRANSITION_TABLE);
 
       Map<Weather, Integer> occurrences = new HashMap<>();
@@ -68,7 +70,7 @@ public class WeatherSimulator
       occurrences.put(E_CLOUDY, 0);
       occurrences.put(E_RAINY, 0);
 
-      int numberOfDays = 100000;
+      int numberOfDays = 1000000;
 
       for (int dayIdx = 0; dayIdx < numberOfDays; ++dayIdx)
       {
@@ -76,11 +78,22 @@ public class WeatherSimulator
          occurrences.put(newWeather, occurrences.get(newWeather) + 1);
       }
 
-      // @foff
       System.out.println(
-            occurrences.entrySet().stream()
-            .map(e -> e.getKey().toString() + ": " + e.getValue() * 100.0 / numberOfDays + "%")
-            .collect(Collectors.joining(System.getProperty("line.separator"))));
-      // @fon
+            "Stationary distribution after " + numberOfDays + " state transitions: "
+                  + System.getProperty("line.separator") +
+                  occurrences.entrySet().stream()
+                        .sorted((e1, e2) -> e1.getKey().compareTo(e2.getKey()))
+                        .map(e -> e.getKey().toString() + ": " + e.getValue() * 100.0 / numberOfDays + "%")
+                        .collect(Collectors.joining(System.getProperty("line.separator"))));
+
+      Map<Weather, Double> stationaryDistribution = weatherChain.getStationaryDistribution();
+
+      System.out.println(
+            "Calculated stationary distribution: "
+                  + System.getProperty("line.separator") +
+                  stationaryDistribution.entrySet().stream()
+                        .sorted((e1, e2) -> e1.getKey().compareTo(e2.getKey()))
+                        .map(e -> e.getKey().toString() + ": " + e.getValue() * 100.0 + "%")
+                        .collect(Collectors.joining(System.getProperty("line.separator"))));
    }
 }
