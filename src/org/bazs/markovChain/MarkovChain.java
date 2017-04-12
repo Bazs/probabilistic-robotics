@@ -6,7 +6,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-import java.util.stream.DoubleStream;
 import java.util.stream.IntStream;
 
 import org.jblas.DoubleMatrix;
@@ -41,6 +40,17 @@ public class MarkovChain<State extends Enum<State>>
       _currentState = state;
    }
 
+   /**
+    * Calculates the stationary distribution of the Markov chain, if it has one.
+    * <p>
+    * Solves the linear equation {@code mu = mu * P}, where mu is the statinoary
+    * distribution, and P is the transition table of the Markov chain, using the
+    * additional constraint, that the sum of the elements of mu need to add up
+    * to 1.
+    * 
+    * @return A Map between the States and their corresponding contribution to
+    *         the stationary distribution.
+    */
    public Map<State, Double> getStationaryDistribution()
    {
       List<List<Double>> probabilitiesPerState = _transitionTable.entrySet().stream()
@@ -51,55 +61,53 @@ public class MarkovChain<State extends Enum<State>>
                   .collect(Collectors.toList()))
             .collect(Collectors.toList());
 
-      List<List<Double>> pTranspose = IntStream.range(0, probabilitiesPerState.get(0).size())
-            .mapToObj(i ->
-            {
-               return IntStream.range(0, probabilitiesPerState.size())
-                     .mapToObj(j -> probabilitiesPerState.get(j).get(i))
-                     .collect(Collectors.toList());
+      final int numStates = probabilitiesPerState.size();
 
-            })
-            .collect(Collectors.toList());
-
-      for (int row = 0; row < pTranspose.size(); ++row)
+      double[][] Pt = new double[numStates][];
+      for (int row = 0; row < numStates; ++row)
       {
-         List<Double> currentRow = pTranspose.get(row);
+         Pt[row] = new double[numStates];
+      }
 
-         if (row == 0)
+      for (int row = 0; row < numStates; ++row)
+      {
+         List<Double> currRow = probabilitiesPerState.get(row);
+         for (int col = 0; col < numStates; ++col)
          {
-            for (int col = 0; col < currentRow.size(); ++col)
+            // transpose the P matrix, so that the equation can take the form of
+            // Pt * mut = mut
+            Pt[col][row] = currRow.get(col);
+
+            // Move the mut values into Pt, i.e subtract the 1 coefficient from
+            // the main axis
+            if (col == row)
             {
-               currentRow.set(col, currentRow.get(col) - 1.0);
+               Pt[col][row] -= 1.0;
             }
          }
-
-         currentRow.set(row, currentRow.get(row) - 1.0);
       }
 
-      List<Double> B = DoubleStream.iterate(0.0, d -> d)
-            .limit(probabilitiesPerState.size())
-            .boxed()
-            .collect(Collectors.toList());
-      B.set(0, -1.0);
-
-      double[] b = new double[B.size()];
-      for (int idx = 0; idx < B.size(); ++idx)
+      // The additional constraint that sum(mut) = 1 can be written as an extra
+      // row in the equation system, where all coefficients are 1, and the
+      // expected result is also 1. This would make Pt non-square, which is not
+      // accepted by jblas when getting exact solutions for linear equation
+      // systems, so we move this row into the system by subtracting it from
+      // the first row.
+      for (int col = 0; col < numStates; ++col)
       {
-         b[idx] = B.get(idx);
+         Pt[0][col] -= 1.0;
       }
 
-      double[][] A = new double[pTranspose.size()][];
-      for (int row = 0; row < pTranspose.size(); ++row)
+      // Based on the above, the right side of the system is zeroes, except for
+      // the first row, which is -1
+      double[] b = new double[numStates];
+      b[0] = -1.0;
+      for (int coeffIdx = 1; coeffIdx < numStates; ++coeffIdx)
       {
-         List<Double> currRow = pTranspose.get(row);
-         A[row] = new double[currRow.size()];
-         for (int col = 0; col < currRow.size(); ++col)
-         {
-            A[row][col] = currRow.get(col);
-         }
+         b[coeffIdx] = 0.0;
       }
 
-      DoubleMatrix Amat = new DoubleMatrix(A);
+      DoubleMatrix Amat = new DoubleMatrix(Pt);
       DoubleMatrix bMat = new DoubleMatrix(b.length, 1, b);
 
       DoubleMatrix stationaryDistributionMat = Solve.solve(Amat, bMat);
