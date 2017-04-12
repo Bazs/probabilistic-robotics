@@ -10,6 +10,7 @@ import java.util.stream.Collectors;
 
 import org.bazs.markovChain.MarkovChain;
 import org.bazs.markovChain.RandomDecider;
+import org.bazs.mathUtils.MathUtils;
 
 public class WeatherSimulator
 {
@@ -78,9 +79,10 @@ public class WeatherSimulator
          occurrences.put(newWeather, occurrences.get(newWeather) + 1);
       }
 
+      String newLine = System.getProperty("line.separator");
+
       System.out.println(
-            "Stationary distribution after " + numberOfDays + " state transitions: "
-                  + System.getProperty("line.separator") +
+            "Stationary distribution after " + numberOfDays + " state transitions: " + newLine +
                   occurrences.entrySet().stream()
                         .sorted((e1, e2) -> e1.getKey().compareTo(e2.getKey()))
                         .map(e -> e.getKey().toString() + ": " + e.getValue() * 100.0 / numberOfDays + "%")
@@ -89,11 +91,14 @@ public class WeatherSimulator
       Map<Weather, Double> stationaryDistribution = weatherChain.getStationaryDistribution();
 
       System.out.println(
-            "Calculated stationary distribution: "
-                  + System.getProperty("line.separator") +
+            "Calculated stationary distribution: " + newLine +
                   stationaryDistribution.entrySet().stream()
                         .sorted((e1, e2) -> e1.getKey().compareTo(e2.getKey()))
                         .map(e -> e.getKey().toString() + ": " + e.getValue() * 100.0 + "%")
                         .collect(Collectors.joining(System.getProperty("line.separator"))));
+
+      double entropy = MathUtils.calcEntropyOfDiscreteProbDist(stationaryDistribution.values().toArray(
+            new Double[stationaryDistribution.size()]));
+      System.out.println(newLine + "Entropy of the stationary distribution: " + entropy);
    }
 }

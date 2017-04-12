@@ -6,4 +6,16 @@ public class MathUtils
    {
       return (Math.abs(a - b) < eps);
    }
+
+   public static double calcEntropyOfDiscreteProbDist(Double[] probDist)
+   {
+      double entropy = 0.0;
+
+      for (double x : probDist)
+      {
+         entropy -= x * Math.log(x) / Math.log(2);
+      }
+
+      return entropy;
+   }
 }
