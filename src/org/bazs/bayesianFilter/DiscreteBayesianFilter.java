@@ -4,6 +4,7 @@ import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.stream.Collectors;
 
 public class DiscreteBayesianFilter<State extends Enum<State>, Control extends Enum<Control>, Measurement extends Enum<Measurement>>
@@ -93,6 +94,11 @@ public class DiscreteBayesianFilter<State extends Enum<State>, Control extends E
       normalize();
    }
 
+   public Map<State, Double> getBeliefs()
+   {
+      return Collections.unmodifiableMap(_beliefs);
+   }
+
    private Map<State, Double> getPredictions(Control control)
    {
       Map<State, Double> predictions;
@@ -165,14 +171,14 @@ public class DiscreteBayesianFilter<State extends Enum<State>, Control extends E
 
       _beliefs.putAll(
             _beliefs.entrySet().stream()
-                  .collect(Collectors.toMap(e -> e.getKey(), e -> e.getValue() / sum)));
+                  .collect(Collectors.toMap(Entry::getKey, e -> e.getValue() / sum)));
    }
 
    @Override
    public String toString()
    {
       return _beliefs.entrySet().stream()
-            .map(e -> "Belief for state '" + e.getKey() + "':" + e.getValue())
+            .map(e -> e.getKey() + ":" + e.getValue())
             .collect(Collectors.joining(System.getProperty("line.separator")));
    }
 }
