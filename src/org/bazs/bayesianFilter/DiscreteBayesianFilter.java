@@ -160,23 +160,19 @@ public class DiscreteBayesianFilter<State extends Enum<State>, Control extends E
 
    private void normalize()
    {
-      // @foff
       double sum = _beliefs.values().stream()
             .reduce(0.0, Double::sum);
-      
+
       _beliefs.putAll(
             _beliefs.entrySet().stream()
-            .collect(Collectors.toMap(e -> e.getKey(), e -> e.getValue() / sum)));
-      // @fon
+                  .collect(Collectors.toMap(e -> e.getKey(), e -> e.getValue() / sum)));
    }
 
    @Override
    public String toString()
    {
-      // @foff
       return _beliefs.entrySet().stream()
             .map(e -> "Belief for state '" + e.getKey() + "':" + e.getValue())
             .collect(Collectors.joining(System.getProperty("line.separator")));
-      // @fon
    }
 }
