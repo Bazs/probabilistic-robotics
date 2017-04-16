@@ -38,7 +38,8 @@ public class RandomDecider<Decision extends Enum<Decision>>
          throw new IllegalArgumentException("Empty or null decision probabilites.");
       }
 
-      Class decisionClass = decisionProbabilities.keySet().toArray()[0].getClass();
+      @SuppressWarnings("unchecked")
+      Class<Decision> decisionClass = (Class<Decision>) decisionProbabilities.keySet().toArray()[0].getClass();
 
       if (decisionProbabilities.size() != EnumSet.allOf(decisionClass).size())
       {
@@ -46,7 +47,7 @@ public class RandomDecider<Decision extends Enum<Decision>>
       }
 
       Double probabilitySum = decisionProbabilities.values().stream().reduce(0.0, Double::sum);
-      if (!MathUtils.equals(1.0, probabilitySum, DOUBLE_TOLERANCE))
+      if (!MathUtils.doubleEquals(1.0, probabilitySum, DOUBLE_TOLERANCE))
       {
          throw new IllegalArgumentException("The probability map does not describe a full decision space.");
       }

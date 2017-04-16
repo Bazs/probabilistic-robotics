@@ -17,6 +17,7 @@ public class MarkovChain<State extends Enum<State>>
 
    private State _currentState;
 
+   @SuppressWarnings("unchecked")
    public MarkovChain(State initialState, Map<State, RandomDecider<State>> transitionTable)
    {
       if ((transitionTable.size() != EnumSet.allOf(initialState.getClass()).size()))
