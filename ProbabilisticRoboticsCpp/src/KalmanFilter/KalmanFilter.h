@@ -8,8 +8,9 @@
 #ifndef SRC_KALMANFILTER_H_
 #define SRC_KALMANFILTER_H_
 
+class KalmanFilter
+{
 
-
-
+};
 
 #endif /* SRC_KALMANFILTER_H_ */

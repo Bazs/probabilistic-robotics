@@ -5,6 +5,7 @@
  *      Author: Istvan Balazs Opra
  */
 
+#include <KalmanFilter.h>
 
 
 

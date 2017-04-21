@@ -1,0 +1,2 @@
+add_executable (Chapter3Problem1 Chapter3Problem1.cpp)
+target_link_libraries (Chapter3Problem1 KalmanFilter)
