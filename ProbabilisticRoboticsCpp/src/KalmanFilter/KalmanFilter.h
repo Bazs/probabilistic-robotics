@@ -5,12 +5,21 @@
  *      Author: Istvan Balazs Opra
  */
 
-#ifndef SRC_KALMANFILTER_H_
-#define SRC_KALMANFILTER_H_
+#ifndef KALMAN_FILTER_H
+#define KALMAN_FILTER_H
+
+#include <eigen3/Eigen/Core>
+
+using Eigen::MatrixXd;
 
 class KalmanFilter
 {
-
+public:
+	KalmanFilter(MatrixXd &&A, MatrixXd &&B, MatrixXd &&Rt);
+private:
+	MatrixXd A;
+	MatrixXd B;
+	MatrixXd Rt;
 };
 
-#endif /* SRC_KALMANFILTER_H_ */
+#endif /* KALMAN_FILTER_H */
