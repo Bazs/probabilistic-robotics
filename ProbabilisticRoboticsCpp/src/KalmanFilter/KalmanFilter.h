@@ -10,16 +10,36 @@
 
 #include <eigen3/Eigen/Core>
 
-using Eigen::MatrixXd;
-
+template <unsigned int numStates>
 class KalmanFilter
 {
 public:
-	KalmanFilter(MatrixXd &&A, MatrixXd &&B, MatrixXd &&Rt);
+	typedef Eigen::Matrix<double, numStates, numStates> FMat;
+	typedef Eigen::Matrix<double, 1, numStates> FVec;
+
+	KalmanFilter(FMat &&A, FMat &&B, FMat &&Rt) :
+		A(std::move(A)),
+		B(std::move(B)),
+		Rt(std::move(Rt))
+	{}
+
+	void setBelief(FVec &&mu, FMat &&Sigma)
+	{
+		this->mu = mu;
+		this->Sigma = Sigma;
+	}
+
+	void predictionStep()
+	{
+
+	}
 private:
-	MatrixXd A;
-	MatrixXd B;
-	MatrixXd Rt;
+	FMat A;
+	FMat B;
+	FMat Rt;
+
+	FVec mu;
+	FMat Sigma;
 };
 
 #endif /* KALMAN_FILTER_H */
