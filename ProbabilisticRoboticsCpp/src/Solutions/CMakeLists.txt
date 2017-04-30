@@ -5,4 +5,4 @@ SET(INCLUDES
    THIRD_PARTY_INCLUDES INTERNAL_LIB_INCLUDES COMMON_INCLUDES)
 
 INCLUDE_DIRECTORIES(INCLUDES)
-add_executable (Chapter3Problem1 Chapter3Problem1.cpp)
+add_executable (Chapter3Problem1 Chapter3Problem1-2.cpp)
