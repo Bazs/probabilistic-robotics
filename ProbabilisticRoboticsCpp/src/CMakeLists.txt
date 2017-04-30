@@ -11,7 +11,7 @@ configure_file (
 )
 
 # C++ compiler
-SET (CMAKE_CXX_STANDARD 11) 
+SET (CMAKE_CXX_STANDARD 14) 
 
 # Find third party libraries
 find_package (Eigen3 3.3 REQUIRED NO_MODULE)

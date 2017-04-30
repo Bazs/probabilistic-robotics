@@ -15,7 +15,7 @@ using std::move;
 USIGN32 const numStates = 2UL;
 USIGN32 const numControls = 1UL;
 USIGN32 const numMeasurements = 1UL;
-using Filter = KalmanFilter<numStates, numControls, numMeasurements, Eigen::FullPivHouseholderQR<Eigen::Matrix<double, numMeasurements, numMeasurements>>>;
+using Filter = KalmanFilter<numStates, numControls, numMeasurements, Eigen::FullPivHouseholderQR>;
 
 using SMat = Filter::SMat;
 using CMat = Filter::CMat;
