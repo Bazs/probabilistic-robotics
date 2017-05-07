@@ -8,14 +8,14 @@
 #include <eigen3/Eigen/Core>
 #include <eigen3/Eigen/Dense>
 #include <CommonTypes.h>
-#include <KalmanFilter.h>
+#include <ExtendedKalmanFilter.h>
 
 using std::move;
 
-USIGN32 const numStates = 2UL;
+USIGN32 const numStates = 3UL;
 USIGN32 const numControls = 1UL;
 USIGN32 const numMeasurements = 1UL;
-using Filter = KalmanFilter<numStates, numControls, numMeasurements, Eigen::FullPivHouseholderQR>;
+using Filter = ExtendedKalmanFilter<numStates, numControls, numMeasurements, Eigen::FullPivHouseholderQR>;
 
 using SMat = Filter::SMat;
 using CMat = Filter::CMat;
@@ -25,25 +25,29 @@ using SVec = Filter::SVec;
 using CVec = Filter::CVec;
 using MVec = Filter::MVec;
 
+SVec stateTransitionFun(CVec& controls, SVec& mu)
+{
+	return mu;
+}
+
+CVec measurementFun(SVec& mu)
+{
+	return CVec();
+}
+
 int main()
 {
-	SMat A;
-	A << 1, 1, 0, 1;
-	CMat B;
-	B << 0, 0;
-	SMat R;
+	SMat G = SMat::Identity();
+	SMat R = SMat::Identity();
 	R << 0.25, 0.5, 0.5, 1;
-	SMMat C;
-	C << 1, 0;
-	MMat Q;
-	Q << 10;
+	SMMat H = SMMat::Identity();
+	MMat Q = MMat::Identity();
 
-	Filter filter(move(A), move(B), move(C), move(R), move(Q));
+	Filter filter(stateTransitionFun, move(G), measurementFun, move(H), move(R), move(Q));
 
 	SVec initialMu;
-	initialMu << 0, 0;
-	SMat initialSigma;
-	initialSigma << 0, 0, 0, 0;
+	initialMu << 0, 0, 0;
+	SMat initialSigma = SMat::Identity();
 
 	filter.setBelief(move(initialMu), move(initialSigma));
 
@@ -57,15 +61,6 @@ int main()
 	{
 		filter.update(controls, measurement);
 		std::cout << "Iteration " << iteration + 1 << ":" << std::endl << filter << std::endl << std::endl;
-		SVec mu = filter.getMean();
-		SMat sigma = filter.getCovariance();
-		Eigen::SelfAdjointEigenSolver<SMat> eigenSolver(sigma);
-		SVec eigenvalues = eigenSolver.eigenvalues();
-		SMat eigenvectors = eigenSolver.eigenvectors();
 	}
-
-	measurement << 5;
-	filter.update(controls, measurement);
-	std::cout << "Measurement: " << measurement << ", result:" << std::endl << filter;
 }
 

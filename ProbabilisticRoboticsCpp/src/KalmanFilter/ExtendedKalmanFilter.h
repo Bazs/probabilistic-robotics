@@ -1,18 +1,17 @@
 /*
- * KalmanFilter.h
+ * ExtendedKalmanFilter.h
  *
- *  Created on: Apr 19, 2017
+ *  Created on: May 7, 2017
  *      Author: Istvan Balazs Opra
  */
-
-#ifndef KALMAN_FILTER_H
-#define KALMAN_FILTER_H
+#ifndef EXTENDED_KALMAN_FILTER_H
+#define EXTENDED_KALMAN_FILTER_H
 
 #include <KalmanFilterBase.h>
 
 template <USIGN32 numStates, USIGN32 numControls, USIGN32 numMeasurements,
 	template<class> class Decomposition = Eigen::ColPivHouseholderQR>
-class KalmanFilter : public KalmanFilterBase<numStates, numControls, numMeasurements, Decomposition>
+class ExtendedKalmanFilter : public KalmanFilterBase<numStates, numControls, numMeasurements, Decomposition>
 {
 public:
 	using Base = KalmanFilterBase<numStates, numControls, numMeasurements, Decomposition>;
@@ -24,41 +23,43 @@ public:
 	using CVec = typename Base::CVec;
 	using MVec = typename Base::MVec;
 
-	KalmanFilter(SMat&& A, CMat&& B, SMMat&& C, SMat&& R, MMat&& Q) :
+	using SFun = std::function<SVec(CVec&,SVec&)>;
+	using MFun = std::function<CVec(SVec&)>;
+
+	ExtendedKalmanFilter(SFun g, SMat&& G, MFun h, SMMat&& H, SMat&& R, MMat&& Q) :
 		Base(std::move(R), std::move(Q)),
-		A(std::move(A)),
-		B(std::move(B)),
-		C(std::move(C))
+		g(g),
+		G(std::move(G)),
+		h(h),
+		H(std::move(H))
 	{}
 
-	KalmanFilter(const KalmanFilter& other) = delete;
-	KalmanFilter& operator=(const KalmanFilter& other) = delete;
-
-	virtual ~KalmanFilter()
-	{}
+	virtual ~ExtendedKalmanFilter();
 
 	virtual void update(CVec& controls, MVec& measurements)
 	{
 		predictionStep(controls);
 		measurementUpdate(measurements);
 	}
+
 private:
-	SMat A;
-	CMat B;
-	SMMat C;
+	SFun g;
+	SMat G;
+	MFun h;
+	SMMat H;
 
 	void predictionStep(CVec& controls)
 	{
-		Base::mu = A * Base::mu + B * controls;
-		Base::sigma = A * Base::sigma * A.transpose() + Base::R;
+		Base::mu = g(controls, Base::mu);
+		Base::sigma = G * Base::sigma * G.transpose() + Base::R;
 	}
 
 	void measurementUpdate(MVec& measurements)
 	{
-		const SVec& K = Base::calculateKalmanGain(C);
-		Base::mu = Base::mu + K * (measurements - C * Base::mu);
-		Base::sigma = (SMat::Identity() - K * C) * Base::sigma;
+		const SVec& K = Base::calculateKalmanGain(H);
+		Base::mu = Base::mu + K * (measurements - h(Base::mu));
+		Base::sigma = (SMat::Identity() - K * H) * Base::sigma;
 	}
 };
 
-#endif /* KALMAN_FILTER_H */
+#endif // EXTENDED_KALMAN_FILTER_H
