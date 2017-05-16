@@ -25,10 +25,10 @@ public:
 	using MVec = typename Base::MVec;
 
 	KalmanFilter(SMat&& A, CMat&& B, SMMat&& C, SMat&& R, MMat&& Q) :
-		Base(std::move(R), std::move(Q)),
-		A(std::move(A)),
-		B(std::move(B)),
-		C(std::move(C))
+		Base(std::forward<SMat>(R), std::forward<MMat>(Q)),
+		A(std::forward<SMat>(A)),
+		B(std::forward<CMat>(B)),
+		C(std::forward<SMMat>(C))
 	{}
 
 	KalmanFilter(const KalmanFilter& other) = delete;

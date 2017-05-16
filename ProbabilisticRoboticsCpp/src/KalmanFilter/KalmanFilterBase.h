@@ -23,7 +23,8 @@ public:
 	using CVec = Eigen::Matrix<double, numControls, 1>;
 	using MVec = Eigen::Matrix<double, numMeasurements, 1>;
 
-	KalmanFilterBase(SMat&& R, MMat&& Q) : R(std::move(R)), Q(std::move(Q)), mu(), sigma(), decomposition()
+	KalmanFilterBase(SMat&& R, MMat&& Q) : R(std::forward<SMat>(R)), Q(std::forward<MMat>(Q)), mu(), sigma(),
+			decomposition()
 	{}
 
 	virtual ~KalmanFilterBase()

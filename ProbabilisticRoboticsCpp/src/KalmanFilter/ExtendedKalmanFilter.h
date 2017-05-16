@@ -27,14 +27,15 @@ public:
 	using MFun = std::function<CVec(SVec&)>;
 
 	ExtendedKalmanFilter(SFun g, SMat&& G, MFun h, SMMat&& H, SMat&& R, MMat&& Q) :
-		Base(std::move(R), std::move(Q)),
+		Base(std::forward<SMat>(R), std::forward<MMat>(Q)),
 		g(g),
-		G(std::move(G)),
+		G(std::forward<SMat>(G)),
 		h(h),
-		H(std::move(H))
+		H(std::forward<SMMat>(H))
 	{}
 
-	virtual ~ExtendedKalmanFilter();
+	virtual ~ExtendedKalmanFilter()
+	{}
 
 	virtual void update(CVec& controls, MVec& measurements)
 	{
