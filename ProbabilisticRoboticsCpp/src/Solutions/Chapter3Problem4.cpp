@@ -9,6 +9,7 @@
 #include <eigen3/Eigen/Dense>
 #include <CommonTypes.h>
 #include <ExtendedKalmanFilter.h>
+#include <cmath>
 
 using std::move;
 
@@ -25,12 +26,17 @@ using SVec = Filter::SVec;
 using CVec = Filter::CVec;
 using MVec = Filter::MVec;
 
-SVec stateTransitionFun(CVec& controls, SVec& mu)
+void stateTransitionFun(const CVec& controls, SVec& mu)
 {
-	return mu;
+	double x = mu(0);
+	double y = mu(1);
+	double th = mu(2);
+	double d = controls(0);
+	mu(0) = x + cos(th) * d;
+	mu(1) = y + sin(th) * d;
 }
 
-CVec measurementFun(SVec& mu)
+CVec measurementFun(const SVec& mu)
 {
 	return CVec();
 }
@@ -38,7 +44,7 @@ CVec measurementFun(SVec& mu)
 int main()
 {
 	SMat G = SMat::Identity();
-	SMat R = SMat::Identity();
+	SMat R = SMat::Zero();
 	R << 0.25, 0.5, 0.5, 1;
 	SMMat H = SMMat::Identity();
 	MMat Q = MMat::Identity();
@@ -47,7 +53,8 @@ int main()
 
 	SVec initialMu;
 	initialMu << 0, 0, 0;
-	SMat initialSigma = SMat::Identity();
+	SMat initialSigma;
+	initialSigma << 0.01, 0.0, 0.0, 0.0, 0.01, 0.0, 0.0, 0.0, 10000.0;
 
 	filter.setBelief(move(initialMu), move(initialSigma));
 

@@ -23,8 +23,8 @@ public:
 	using CVec = typename Base::CVec;
 	using MVec = typename Base::MVec;
 
-	using SFun = std::function<SVec(CVec&,SVec&)>;
-	using MFun = std::function<CVec(SVec&)>;
+	using SFun = std::function<void(const CVec&,SVec&)>;
+	using MFun = std::function<CVec(const SVec&)>;
 
 	ExtendedKalmanFilter(SFun g, SMat&& G, MFun h, SMMat&& H, SMat&& R, MMat&& Q) :
 		Base(std::forward<SMat>(R), std::forward<MMat>(Q)),
@@ -51,7 +51,7 @@ private:
 
 	void predictionStep(CVec& controls)
 	{
-		Base::mu = g(controls, Base::mu);
+		g(controls, Base::mu);
 		Base::sigma = G * Base::sigma * G.transpose() + Base::R;
 	}
 
