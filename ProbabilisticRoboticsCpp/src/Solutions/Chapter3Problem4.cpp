@@ -13,8 +13,8 @@
 
 using std::move;
 
-USIGN32 const numStates = 3UL;
-USIGN32 const numControls = 1UL;
+USIGN32 const numStates = 3UL; 			/**< X, Y, theta */
+USIGN32 const numControls = 1UL;        /**< d (dislocation) */
 USIGN32 const numMeasurements = 1UL;
 using Filter = ExtendedKalmanFilter<numStates, numControls, numMeasurements, Eigen::FullPivHouseholderQR>;
 
@@ -36,6 +36,20 @@ void stateTransitionFun(const CVec& controls, SVec& mu)
 	mu(1) = y + sin(th) * d;
 }
 
+SMat gJacobian(const CVec& controls, const SVec& mu)
+{
+	SMat Gt;
+	Gt << 1.0, 0.0, -sin(mu(2)) * controls(0),
+	      0.0, 1.0, cos(mu(2)) * controls(0),
+		  0.0, 0.0, 1.0;
+	return Gt;
+}
+
+SMMat hJacobian(const SVec& mu)
+{
+	return SMMat::Identity();
+}
+
 CVec measurementFun(const SVec& mu)
 {
 	return CVec();
@@ -43,13 +57,11 @@ CVec measurementFun(const SVec& mu)
 
 int main()
 {
-	SMat G = SMat::Identity();
 	SMat R = SMat::Zero();
 	R << 0.25, 0.5, 0.5, 1;
-	SMMat H = SMMat::Identity();
 	MMat Q = MMat::Identity();
 
-	Filter filter(stateTransitionFun, move(G), measurementFun, move(H), move(R), move(Q));
+	Filter filter(stateTransitionFun, gJacobian, measurementFun, hJacobian, move(R), move(Q));
 
 	SVec initialMu;
 	initialMu << 0, 0, 0;

@@ -23,15 +23,17 @@ public:
 	using CVec = typename Base::CVec;
 	using MVec = typename Base::MVec;
 
-	using SFun = std::function<void(const CVec&,SVec&)>;
+	using SFun = std::function<void(const CVec&, SVec&)>;
+	using GFun = std::function<SMat(const CVec&, SVec&)>;
 	using MFun = std::function<CVec(const SVec&)>;
+	using HFun = std::function<SMMat(const SVec&)>;
 
-	ExtendedKalmanFilter(SFun g, SMat&& G, MFun h, SMMat&& H, SMat&& R, MMat&& Q) :
+	ExtendedKalmanFilter(SFun&& g, GFun&& gJacobian, MFun&& h, HFun&& hJacobian, SMat&& R, MMat&& Q) :
 		Base(std::forward<SMat>(R), std::forward<MMat>(Q)),
 		g(g),
-		G(std::forward<SMat>(G)),
+		gFun(gJacobian),
 		h(h),
-		H(std::forward<SMMat>(H))
+		hFun(hJacobian)
 	{}
 
 	virtual ~ExtendedKalmanFilter()
@@ -45,18 +47,20 @@ public:
 
 private:
 	SFun g;
-	SMat G;
+	GFun gFun;
 	MFun h;
-	SMMat H;
+	HFun hFun;
 
 	void predictionStep(CVec& controls)
 	{
-		g(controls, Base::mu);
+		SMat G = gFun(controls, Base::mu);
 		Base::sigma = G * Base::sigma * G.transpose() + Base::R;
+		g(controls, Base::mu);
 	}
 
 	void measurementUpdate(MVec& measurements)
 	{
+		SMMat H = hFun(Base::mu);
 		const SVec& K = Base::calculateKalmanGain(H);
 		Base::mu = Base::mu + K * (measurements - h(Base::mu));
 		Base::sigma = (SMat::Identity() - K * H) * Base::sigma;
