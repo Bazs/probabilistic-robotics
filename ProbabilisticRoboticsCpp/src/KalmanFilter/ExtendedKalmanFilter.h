@@ -45,12 +45,6 @@ public:
 		measurementUpdate(measurements);
 	}
 
-private:
-	SFun g;
-	GFun gFun;
-	MFun h;
-	HFun hFun;
-
 	void predictionStep(CVec& controls)
 	{
 		SMat G = gFun(controls, Base::mu);
@@ -65,6 +59,12 @@ private:
 		Base::mu = Base::mu + K * (measurements - h(Base::mu));
 		Base::sigma = (SMat::Identity() - K * H) * Base::sigma;
 	}
+
+private:
+	SFun g;
+	GFun gFun;
+	MFun h;
+	HFun hFun;
 };
 
 #endif // EXTENDED_KALMAN_FILTER_H

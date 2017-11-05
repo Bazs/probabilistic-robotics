@@ -12,6 +12,7 @@
 #include <cmath>
 
 using std::move;
+using std::endl;
 
 USIGN32 const numStates = 3UL; 			/**< X, Y, theta */
 USIGN32 const numControls = 1UL;        /**< d (dislocation) */
@@ -57,8 +58,7 @@ CVec measurementFun(const SVec& mu)
 
 int main()
 {
-	SMat R = SMat::Zero();
-	R << 0.25, 0.5, 0.5, 1;
+	SMat R = SMat::Zero(); // Robot moves flawlessly without any noise
 	MMat Q = MMat::Identity();
 
 	Filter filter(stateTransitionFun, gJacobian, measurementFun, hJacobian, move(R), move(Q));
@@ -71,15 +71,17 @@ int main()
 	filter.setBelief(move(initialMu), move(initialSigma));
 
 	CVec controls;
-	controls << 0;
+	controls << 1.0;
 
 	MVec measurement;
 	measurement << 0;
 
-	for (int iteration = 0; iteration < 4; ++iteration)
+	std::cout << "Initial state:" << filter << endl << endl;
+
+	for (int iteration = 0; iteration < 1; ++iteration)
 	{
-		filter.update(controls, measurement);
-		std::cout << "Iteration " << iteration + 1 << ":" << std::endl << filter << std::endl << std::endl;
+		filter.predictionStep(controls);
+		std::cout << "Iteration " << iteration + 1 << ":" << endl << filter << endl << endl;
 	}
 }
 
