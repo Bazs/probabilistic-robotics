@@ -7,19 +7,22 @@ def generate_random_coordinate(map_matrix):
     return random.randint(0, map_matrix.shape[1]-1), random.randint(0, map_matrix.shape[0]-1)
 
 
+def generate_random_free_coordinate(map_matrix):
+    location_is_free = False
+    while location_is_free is False:
+        x, y = generate_random_coordinate(map_matrix)
+        location_is_free = 0 == map_matrix[y, x]
+
+    return x, y
+
+
 def generate_obstacles(map_matrix, obstacle_count):
     random.seed(3)
     generated_count = 0
 
     while generated_count < obstacle_count:
-
-        location_is_free = False
-        while location_is_free is False:
-            x, y = generate_random_coordinate(map_matrix)
-            location_is_free = 0 == map_matrix[y, x]
-
+        x, y = generate_random_free_coordinate(map_matrix)
         map_matrix[y, x] = 1
-
         generated_count = generated_count + 1
 
 
