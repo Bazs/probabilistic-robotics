@@ -11,7 +11,7 @@ def generate_random_free_coordinate(map_matrix):
     location_is_free = False
     while location_is_free is False:
         x, y = generate_random_coordinate(map_matrix)
-        location_is_free = 0 == map_matrix[y, x]
+        location_is_free = 0 == map_matrix.item(y, x)
 
     return x, y
 
