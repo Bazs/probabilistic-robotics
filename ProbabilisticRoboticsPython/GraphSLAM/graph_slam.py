@@ -1,4 +1,4 @@
-from slam_utils.map import generate_ground_truth_map, generate_random_free_coordinate
+from slam_utils.map import generate_ground_truth_map
 from slam_utils.path_generator import generate_ground_truth_path
 
 import matplotlib.pyplot as plt
@@ -10,7 +10,7 @@ MAP_WIDTH = 50
 MAP_HEIGHT = 50
 OBSTACLE_COUNT = 20
 
-ground_truth_map = generate_ground_truth_map(MAP_HEIGHT, MAP_WIDTH, OBSTACLE_COUNT)
+ground_truth_map, obstacles = generate_ground_truth_map(MAP_HEIGHT, MAP_WIDTH, OBSTACLE_COUNT)
 
 # Set up truly random number generation for creating the ground truth path (if the system supports it)
 true_random_gen = rnd.SystemRandom()
@@ -26,6 +26,9 @@ ground_truth_states = generate_ground_truth_path(ground_truth_map, max_velocity=
                                                  velocity_variance=velocity_variance, max_turn_rate=max_turn_rate,
                                                  turn_rate_variance=turn_rate_variance, step_count=step_count)
 
+MAX_SENSING_RANGE = 10
+SENSING_RANGE_VARIANCE = 6
+
 plt.plot()
 plt.title("Ground truth map")
 plt.imshow(ground_truth_map)
@@ -35,9 +38,6 @@ path_y = []
 for state in ground_truth_states:
     path_x.append(state[0])
     path_y.append(state[1])
-
-print(path_x)
-print(path_y)
 
 plt.plot(path_x, path_y, marker='o')
 
