@@ -64,5 +64,5 @@ class TestMeasurementModel(unittest.TestCase):
             self.assertTrue(np.allclose(expected[index], measurement_vector))
 
 
-if __name__ == "main":
+if __name__ == "__main__":
     unittest.main()
