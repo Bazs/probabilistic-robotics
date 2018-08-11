@@ -42,7 +42,7 @@ def generate_ground_truth_path(ground_truth_map, max_velocity, velocity_variance
     # velocity and turn rate
     v, omega = 0, 0
 
-    for step in range(step_count):
+    for step in range(step_count - 1):
         proposal_state_is_valid = False
 
         while proposal_state_is_valid is False:
