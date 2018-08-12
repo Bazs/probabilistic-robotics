@@ -28,11 +28,12 @@ if __name__ == "__main__":
     rnd.seed(true_random_gen.random())
 
     ground_truth_states = generate_ground_truth_path(ground_truth_map, max_velocity=MAX_VELOCITY,
-                                                     velocity_variance=VELOCITY_VARIANCE, max_turn_rate=MAX_TURN_RATE,
-                                                     turn_rate_variance=TURN_RATE_VARIANCE, step_count=STEP_COUNT)
+                                                     velocity_deviation=VELOCITY_DEVIATION, max_turn_rate=MAX_TURN_RATE,
+                                                     turn_rate_deviation=TURN_RATE_DEVIATION, step_count=STEP_COUNT)
 
     measurements = generate_measurements(ground_truth_states, landmarks, max_sensing_range=MAX_SENSING_RANGE,
-                                         sensing_range_variance=SENSING_RANGE_VARIANCE)
+                                         sensing_range_deviation=SENSING_RANGE_DEVIATION,
+                                         distance_deviation=DISTANCE_DEVIATION, heading_deviation=HEADING_DEVIATION)
 
     plt.plot()
     plt.title("Ground truth map")

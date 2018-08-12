@@ -1,3 +1,4 @@
+from slam_utils.angle_utils import normalize_angle_pi_minus_pi
 from slam_utils.map import generate_random_free_coordinate
 
 import numpy as np
@@ -11,24 +12,15 @@ def clip(value, minimum, maximum):
     return min(max(value, minimum), maximum)
 
 
-def normalize_angle_pi_minus_pi(angle):
-    while -math.pi > angle:
-        angle = angle + math.pi * 2
-    while math.pi < angle:
-        angle = angle - math.pi * 2
-
-    return angle
-
-
-def generate_ground_truth_path(ground_truth_map, max_velocity, velocity_variance, max_turn_rate, turn_rate_variance,
+def generate_ground_truth_path(ground_truth_map, max_velocity, velocity_deviation, max_turn_rate, turn_rate_deviation,
                                step_count):
     """Generates a random path using a constant velocity and turn rate motion model.
 
     Generates a sequence of step_count consecutive [x, y, theta].T states. The velocity and turn rate is piecewise
     constant between two states, and they change by a random value at each state, which is sampled from a zero mean
-    gaussian distribution, whose variance is given by the parameters velocity_variance and turn_rate_variance. The
-    velocity and turn rate are also limited to the range of [0, max_velocity] and [-max_turn_rate, max_turn_rate],
-    respectively.
+    gaussian distribution, whose standard deviation is given by the parameters velocity_deviation and
+    turn_rate_deviation. The velocity and turn rate are also limited to the range of [0, max_velocity] and
+    [-max_turn_rate, max_turn_rate], respectively.
     Additionally, each generated node is ensured to be collision free with respect to the specified map.
     """
     start_x, start_y = generate_random_free_coordinate(ground_truth_map)
@@ -46,10 +38,10 @@ def generate_ground_truth_path(ground_truth_map, max_velocity, velocity_variance
         proposal_state_is_valid = False
 
         while proposal_state_is_valid is False:
-            v_proposal = v + rnd.normalvariate(0, velocity_variance)
+            v_proposal = v + rnd.normalvariate(0, velocity_deviation)
             v_proposal = clip(v_proposal, 0, max_velocity)
 
-            omega_proposal = omega + rnd.normalvariate(0, turn_rate_variance)
+            omega_proposal = omega + rnd.normalvariate(0, turn_rate_deviation)
             omega_proposal = clip(omega_proposal, -max_turn_rate, max_turn_rate)
 
             # CTRV motion model

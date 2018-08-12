@@ -72,13 +72,14 @@ class MainWindow(QDialog):
         self.current_state_idx = 0
 
         self.slam_state.ground_truth_states = generate_ground_truth_path(
-            self.slam_state.ground_truth_map, max_velocity=MAX_VELOCITY, velocity_variance=VELOCITY_VARIANCE,
-            max_turn_rate=MAX_TURN_RATE, turn_rate_variance=TURN_RATE_VARIANCE, step_count=STEP_COUNT)
+            self.slam_state.ground_truth_map, max_velocity=MAX_VELOCITY, velocity_deviation=VELOCITY_DEVIATION,
+            max_turn_rate=MAX_TURN_RATE, turn_rate_deviation=TURN_RATE_DEVIATION, step_count=STEP_COUNT)
 
         self.slam_state.measurements = \
             generate_measurements(self.slam_state.ground_truth_states,
                                   self.slam_state.landmarks, max_sensing_range=MAX_SENSING_RANGE,
-                                  sensing_range_variance=SENSING_RANGE_VARIANCE)
+                                  sensing_range_deviation=SENSING_RANGE_DEVIATION, distance_deviation=DISTANCE_DEVIATION,
+                                  heading_deviation=HEADING_DEVIATION)
 
         path_x = []
         path_y = []
