@@ -43,6 +43,6 @@ def generate_ground_truth_map(map_height, map_width, landmark_count):
     landmark_coords = np.argwhere(ground_truth_map == 1)
 
     for landmark_coord in landmark_coords:
-        landmarks.append(np.array([[landmark_coord[0], landmark_coord[1], 0]]).T)
+        landmarks.append(np.array([[landmark_coord[1], landmark_coord[0], 0]]).T)
 
     return ground_truth_map, landmarks

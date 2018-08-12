@@ -52,6 +52,7 @@ def generate_measurements(ground_truth_states, landmarks, max_sensing_range, sen
             calculate_measurement_vector_for_detection(ground_truth_state, detected_landmark_and_distance) for
             detected_landmark_and_distance in detected_landmarks_and_distances]
 
+        # TODO add noise to the measurement vector
         measurements.append(measurements_for_state)
 
     return measurements

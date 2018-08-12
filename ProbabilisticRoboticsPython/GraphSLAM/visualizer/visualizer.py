@@ -1,4 +1,4 @@
-from graph_slam import GraphSlamState, generate_ground_truth_map, generate_ground_truth_path
+from graph_slam import GraphSlamState, generate_ground_truth_map, generate_ground_truth_path, generate_measurements
 from slam_parameters import *
 
 from PyQt5.QtWidgets import QDialog, QApplication, QPushButton, QVBoxLayout
@@ -18,9 +18,6 @@ class MainWindow(QDialog):
         # a figure instance to plot on
         self.figure = plt.figure()
 
-        # Attribute for holding the plot of the current path
-        self.path_plot = None
-
         # this is the Canvas Widget that displays the `figure`
         # it takes the `figure` instance as a parameter to __init__
         self.canvas = FigureCanvas(self.figure)
@@ -30,14 +27,28 @@ class MainWindow(QDialog):
         self.toolbar = NavigationToolbar(self.canvas, self)
 
         # Button to trigger new path generation
-        self.button = QPushButton('Regenerate path')
-        self.button.clicked.connect(self.generate_path)
+        self.buttons = {
+            "generate_path": QPushButton("Regenerate path"),
+            "next_state": QPushButton("Next state"),
+            "previous_state": QPushButton("Previous state")
+        }
+
+        self.buttons["generate_path"].clicked.connect(self.generate_path)
+        self.buttons["next_state"].clicked.connect(self.next_state)
+        self.buttons["previous_state"].clicked.connect(self.previous_state)
+
+        # Attribute for holding the plot of the current path
+        self.path_plot = None
+        self.measurements_scatter = None
+        self.current_state_idx = 0
+        self.current_state_scatter = None
 
         # set the layout
         layout = QVBoxLayout()
         layout.addWidget(self.toolbar)
         layout.addWidget(self.canvas)
-        layout.addWidget(self.button)
+        for button in self.buttons.values():
+            layout.addWidget(button)
         self.setLayout(layout)
 
         self.slam_state = GraphSlamState()
@@ -46,6 +57,7 @@ class MainWindow(QDialog):
 
         # Set up truly random number generation for creating the ground truth path (if the system supports it)
         rnd.seed(self.slam_state.true_random_gen.random())
+        self.generate_path()
 
     def _init_world(self):
         self.slam_state.ground_truth_map, self.slam_state.landmarks = \
@@ -56,9 +68,17 @@ class MainWindow(QDialog):
         plt.imshow(self.slam_state.ground_truth_map, origin='lower')
 
     def generate_path(self):
+        self.remove_measurements_from_plot()
+        self.current_state_idx = 0
+
         self.slam_state.ground_truth_states = generate_ground_truth_path(
             self.slam_state.ground_truth_map, max_velocity=MAX_VELOCITY, velocity_variance=VELOCITY_VARIANCE,
             max_turn_rate=MAX_TURN_RATE, turn_rate_variance=TURN_RATE_VARIANCE, step_count=STEP_COUNT)
+
+        self.slam_state.measurements = \
+            generate_measurements(self.slam_state.ground_truth_states,
+                                  self.slam_state.landmarks, max_sensing_range=MAX_SENSING_RANGE,
+                                  sensing_range_variance=SENSING_RANGE_VARIANCE)
 
         path_x = []
         path_y = []
@@ -71,7 +91,46 @@ class MainWindow(QDialog):
 
         self.path_plot, = plt.plot(path_x, path_y, marker='o')
 
-        # # refresh canvas
+        self.plot_measurements_for_current_state()
+        # refresh canvas
+        self.canvas.draw()
+
+    def remove_measurements_from_plot(self):
+        if self.measurements_scatter is not None:
+            self.measurements_scatter.remove()
+            self.measurements_scatter = None
+        if self.current_state_scatter is not None:
+            self.current_state_scatter.remove()
+            self.current_state_scatter = None
+
+    def plot_measurements_for_current_state(self):
+        self.remove_measurements_from_plot()
+
+        measurements_for_state = self.slam_state.measurements[self.current_state_idx]
+        x_measurements = []
+        y_measurements = []
+
+        current_state = self.slam_state.ground_truth_states[self.current_state_idx]
+
+        for measurement in measurements_for_state:
+            x_measurements.append(current_state[0] + math.cos(measurement[1]) * measurement[0])
+            y_measurements.append(current_state[1] + math.sin(measurement[1]) * measurement[0])
+
+        self.measurements_scatter = plt.scatter(x_measurements, y_measurements, c="red")
+        self.current_state_scatter = plt.scatter(current_state[0], current_state[1], s=100, c="orange")
+
+    def previous_state(self):
+        if self.current_state_idx == 0:
+            return
+        self.current_state_idx = self.current_state_idx - 1
+        self.plot_measurements_for_current_state()
+        self.canvas.draw()
+
+    def next_state(self):
+        if self.current_state_idx == STEP_COUNT - 1:
+            return
+        self.current_state_idx = self.current_state_idx + 1
+        self.plot_measurements_for_current_state()
         self.canvas.draw()
 
 

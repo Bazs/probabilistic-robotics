@@ -46,4 +46,17 @@ if __name__ == "__main__":
 
     plt.plot(path_x, path_y, marker='o')
 
+    current_state = 1
+
+    measurements_for_state = measurements[current_state]
+    x_measurements = []
+    y_measurements = []
+
+    for measurement in measurements_for_state:
+        x_measurements.append(ground_truth_states[current_state][0] + math.cos(measurement[1]) * measurement[0])
+        y_measurements.append(ground_truth_states[current_state][1] + math.sin(measurement[1]) * measurement[0])
+
+    plt.scatter(x_measurements, y_measurements, c="red")
+    plt.scatter(ground_truth_states[current_state][0], ground_truth_states[current_state][1], s=100, c='green')
+
     plt.show()
