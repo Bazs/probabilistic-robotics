@@ -1,11 +1,17 @@
 from slam_utils.angle_utils import normalize_angle_pi_minus_pi
+from slam_utils.ctrv_motion_model import calculate_odometry_from_controls
 from slam_utils.map import generate_random_free_coordinate
 
 import numpy as np
 
 import math
-from math import sin, cos
 import random as rnd
+
+
+def add_noise_to_control(control, velocity_control_deviation, turn_rate_control_deviation):
+    control[0] = control[0] + rnd.normalvariate(0, velocity_control_deviation)
+    control[1] = control[1] + rnd.normalvariate(0, turn_rate_control_deviation)
+    return control
 
 
 def clip(value, minimum, maximum):
@@ -13,8 +19,9 @@ def clip(value, minimum, maximum):
 
 
 def generate_ground_truth_path(ground_truth_map, max_velocity, velocity_deviation, max_turn_rate, turn_rate_deviation,
-                               step_count):
-    """Generates a random path using a constant velocity and turn rate motion model.
+                               step_count, velocity_control_deviation, turn_rate_control_deviation):
+    """Generates a random path using a constant velocity and turn rate motion model. Also returns the velocity and turn
+    rate for each state, after adding some zero mean Gaussian noise to them.
 
     Generates a sequence of step_count consecutive [x, y, theta].T states. The velocity and turn rate is piecewise
     constant between two states, and they change by a random value at each state, which is sampled from a zero mean
@@ -33,6 +40,8 @@ def generate_ground_truth_path(ground_truth_map, max_velocity, velocity_deviatio
 
     # velocity and turn rate
     v, omega = 0, 0
+    controls = [add_noise_to_control(np.array([[v, omega]]).T, velocity_control_deviation=velocity_control_deviation,
+                turn_rate_control_deviation=turn_rate_control_deviation)]
 
     for step in range(step_count - 1):
         proposal_state_is_valid = False
@@ -45,11 +54,7 @@ def generate_ground_truth_path(ground_truth_map, max_velocity, velocity_deviatio
             omega_proposal = clip(omega_proposal, -max_turn_rate, max_turn_rate)
 
             # CTRV motion model
-            delta_pos = np.array([[v_proposal/omega_proposal * (sin(omega_proposal + current_state[2])
-                                                                - sin(current_state[2])),
-                                   v_proposal/omega_proposal * (-cos(omega_proposal + current_state[2])
-                                                                + cos(current_state[2])),
-                                   omega_proposal]]).T
+            delta_pos = calculate_odometry_from_controls(v_proposal, omega_proposal, current_state)
             proposal_state = current_state + delta_pos
 
             proposal_x = round(proposal_state.item(0))
@@ -63,9 +68,13 @@ def generate_ground_truth_path(ground_truth_map, max_velocity, velocity_deviatio
         v = v_proposal
         omega = omega_proposal
 
+        controls.append(add_noise_to_control(np.array([[v, omega]]).T,
+                                             velocity_control_deviation=velocity_control_deviation,
+                                             turn_rate_control_deviation=turn_rate_control_deviation))
+
         proposal_state[2] = normalize_angle_pi_minus_pi(proposal_state[2])
 
         ground_truth_states.append(proposal_state)
         current_state = proposal_state
 
-    return ground_truth_states
+    return ground_truth_states, controls

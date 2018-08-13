@@ -11,6 +11,9 @@ VELOCITY_DEVIATION = math.pow(1.5, 2)
 MAX_TURN_RATE = math.pi / 4
 TURN_RATE_DEVIATION = math.pow(math.pi / 180 * 6, 2)
 STEP_COUNT = 200
+# Odometry model parameters
+VELOCITY_CONTROL_DEVIATION = 0.25
+TURN_RATE_CONTROL_DEVIATION = 3
 
 # Sensor model parameters
 MAX_SENSING_RANGE = 15

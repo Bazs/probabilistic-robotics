@@ -71,15 +71,17 @@ class MainWindow(QDialog):
         self.remove_measurements_from_plot()
         self.current_state_idx = 0
 
-        self.slam_state.ground_truth_states = generate_ground_truth_path(
+        self.slam_state.ground_truth_states, self.slam_state.controls = generate_ground_truth_path(
             self.slam_state.ground_truth_map, max_velocity=MAX_VELOCITY, velocity_deviation=VELOCITY_DEVIATION,
-            max_turn_rate=MAX_TURN_RATE, turn_rate_deviation=TURN_RATE_DEVIATION, step_count=STEP_COUNT)
+            max_turn_rate=MAX_TURN_RATE, turn_rate_deviation=TURN_RATE_DEVIATION, step_count=STEP_COUNT,
+            velocity_control_deviation=VELOCITY_CONTROL_DEVIATION,
+            turn_rate_control_deviation=TURN_RATE_CONTROL_DEVIATION)
 
         self.slam_state.measurements = \
             generate_measurements(self.slam_state.ground_truth_states,
                                   self.slam_state.landmarks, max_sensing_range=MAX_SENSING_RANGE,
-                                  sensing_range_deviation=SENSING_RANGE_DEVIATION, distance_deviation=DISTANCE_DEVIATION,
-                                  heading_deviation=HEADING_DEVIATION)
+                                  sensing_range_deviation=SENSING_RANGE_DEVIATION,
+                                  distance_deviation=DISTANCE_DEVIATION, heading_deviation=HEADING_DEVIATION)
 
         path_x = []
         path_y = []
@@ -90,7 +92,7 @@ class MainWindow(QDialog):
         if self.path_plot is not None:
             self.path_plot.remove()
 
-        self.path_plot, = plt.plot(path_x, path_y, marker='o')
+        self.path_plot, = plt.plot(path_x, path_y, marker='o', c="C0")
 
         self.plot_measurements_for_current_state()
         # refresh canvas

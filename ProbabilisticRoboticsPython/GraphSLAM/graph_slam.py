@@ -15,6 +15,8 @@ class GraphSlamState(object):
         self.landmarks = []
 
         self.ground_truth_states = []
+        self.controls = []
+
         self.measurements = []
 
         self.true_random_gen = rnd.SystemRandom()
@@ -27,9 +29,12 @@ if __name__ == "__main__":
     true_random_gen = rnd.SystemRandom()
     rnd.seed(true_random_gen.random())
 
-    ground_truth_states = generate_ground_truth_path(ground_truth_map, max_velocity=MAX_VELOCITY,
-                                                     velocity_deviation=VELOCITY_DEVIATION, max_turn_rate=MAX_TURN_RATE,
-                                                     turn_rate_deviation=TURN_RATE_DEVIATION, step_count=STEP_COUNT)
+    ground_truth_states, controls = \
+        generate_ground_truth_path(ground_truth_map, max_velocity=MAX_VELOCITY,
+                                   velocity_deviation=VELOCITY_DEVIATION, max_turn_rate=MAX_TURN_RATE,
+                                   turn_rate_deviation=TURN_RATE_DEVIATION, step_count=STEP_COUNT,
+                                   velocity_control_deviation=VELOCITY_CONTROL_DEVIATION,
+                                   turn_rate_control_deviation=TURN_RATE_CONTROL_DEVIATION)
 
     measurements = generate_measurements(ground_truth_states, landmarks, max_sensing_range=MAX_SENSING_RANGE,
                                          sensing_range_deviation=SENSING_RANGE_DEVIATION,
