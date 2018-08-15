@@ -1,5 +1,6 @@
 from slam_parameters import *
 from slam_utils.graph_slam_initialize import graph_slam_initialize
+from slam_utils.graph_slam_linearize import graph_slam_linearize
 from slam_utils.map_generator import generate_ground_truth_map
 from slam_utils.measurement_model import generate_measurements
 from slam_utils.path_generator import generate_ground_truth_path
@@ -48,33 +49,8 @@ if __name__ == "__main__":
 
     state_estimates = graph_slam_initialize(controls, state_t0=ground_truth_states[0])
 
-    # Perform GraphSLAM linearize
-    omega = np.identity(3, dtype="float") * 100000
-    xi = np.empty((1, 1))
-
-    R = np.identity(3)
-
-    for index, control in enumerate(controls[1:]):
-        v = control.item(0)
-        om = control.item(1)
-        previous_state = state_estimates[index]
-        current_state_estimate = state_estimates[index] + calculate_odometry_from_controls(v, om, previous_state)
-
-        # Calculate the 6-by-6 update for the information matrix Omega
-        Gt = np.identity(3)
-        Gt[:, -1] = np.ravel(calculate_jacobian_from_controls(v, om, previous_state))
-        omega_xt_xt_1 = np.dot(np.concatenate((-Gt.T, np.identity(3))), np.linalg.inv(R))
-        omega_xt_xt_1 = np.dot(omega_xt_xt_1, np.concatenate((-Gt, np.identity(3)), axis=1))
-
-        upper_left_index = index * 3
-        lower_right_index = index * 3 + 6
-
-        # Expand Omega to accommodate the new information from the motion
-        while lower_right_index > omega.shape[0]:
-            omega = np.concatenate((omega, np.zeros((omega.shape[0], 1))), axis=1)
-            omega = np.concatenate((omega, np.zeros((1, omega.shape[1]))), axis=0)
-
-        omega[upper_left_index:lower_right_index, upper_left_index:lower_right_index] += omega_xt_xt_1
+    graph_slam_linearize(controls, measurements, state_estimates, motion_error_covariance=np.identity(3),
+                         measurement_error_covariance=np.identity(3))
 
     plt.plot()
     plt.title("Ground truth map")
