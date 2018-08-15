@@ -1,4 +1,5 @@
 from graph_slam import GraphSlamState, generate_ground_truth_map, generate_ground_truth_path, generate_measurements
+from slam_utils.plot_utils import plot_path
 from slam_parameters import *
 
 from PyQt5.QtWidgets import QDialog, QApplication, QPushButton, QVBoxLayout
@@ -39,6 +40,7 @@ class MainWindow(QDialog):
 
         # Attribute for holding the plot of the current path
         self.path_plot = None
+        self.odometry_plot = None
         self.measurements_scatter = None
         self.current_state_idx = 0
         self.current_state_scatter = None
@@ -91,8 +93,10 @@ class MainWindow(QDialog):
 
         if self.path_plot is not None:
             self.path_plot.remove()
+        if self.odometry_plot is not None:
+            self.odometry_plot.remove()
 
-        self.path_plot, = plt.plot(path_x, path_y, marker='o', c="C0")
+        self.path_plot, = plot_path(self.slam_state.ground_truth_states, "C0")
 
         self.plot_measurements_for_current_state()
         # refresh canvas

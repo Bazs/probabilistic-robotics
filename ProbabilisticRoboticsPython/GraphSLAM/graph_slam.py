@@ -1,7 +1,9 @@
 from slam_parameters import *
-from slam_utils.map import generate_ground_truth_map
+from slam_utils.graph_slam_initialize import graph_slam_initialize
+from slam_utils.map_generator import generate_ground_truth_map
 from slam_utils.measurement_model import generate_measurements
 from slam_utils.path_generator import generate_ground_truth_path
+from slam_utils.plot_utils import plot_path, plot_measurements_for_state
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -18,6 +20,8 @@ class GraphSlamState(object):
         self.controls = []
 
         self.measurements = []
+
+        self.initial_state_estimates = []
 
         self.true_random_gen = rnd.SystemRandom()
 
@@ -40,29 +44,16 @@ if __name__ == "__main__":
                                          sensing_range_deviation=SENSING_RANGE_DEVIATION,
                                          distance_deviation=DISTANCE_DEVIATION, heading_deviation=HEADING_DEVIATION)
 
+    initial_state_estimates = graph_slam_initialize(controls, state_t0=ground_truth_states[0])
+
     plt.plot()
     plt.title("Ground truth map")
     plt.imshow(ground_truth_map, origin='lower')
 
-    path_x = []
-    path_y = []
-    for state in ground_truth_states:
-        path_x.append(state[0])
-        path_y.append(state[1])
-
-    plt.plot(path_x, path_y, marker='o')
+    plot_path(ground_truth_states, 'C0')
+    plot_path(initial_state_estimates, 'C1')
 
     current_state = 1
-
-    measurements_for_state = measurements[current_state]
-    x_measurements = []
-    y_measurements = []
-
-    for measurement in measurements_for_state:
-        x_measurements.append(ground_truth_states[current_state][0] + math.cos(measurement[1]) * measurement[0])
-        y_measurements.append(ground_truth_states[current_state][1] + math.sin(measurement[1]) * measurement[0])
-
-    plt.scatter(x_measurements, y_measurements, c="red")
-    plt.scatter(ground_truth_states[current_state][0], ground_truth_states[current_state][1], s=100, c='green')
+    plot_measurements_for_state(ground_truth_states[current_state], measurements[current_state])
 
     plt.show()

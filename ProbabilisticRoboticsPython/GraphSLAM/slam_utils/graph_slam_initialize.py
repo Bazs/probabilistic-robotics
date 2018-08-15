@@ -1,19 +1,15 @@
 from slam_utils.ctrv_motion_model import calculate_odometry_from_controls
 
-import numpy as np
 
-
-def graph_slam_initialize(controls):
+def graph_slam_initialize(controls, state_t0):
     """Initializes the mean pose vector by forward-propagating the controls using the motion model. The initial state
-    is at [0, 0, 0].
+    is specified by state_t0.
     """
-    state_t0 = np.array([[0, 0, 0]]).T
-
     initialized_states = [state_t0]
 
     for index, control in enumerate(controls[1:]):
-        initialized_states.append(initialized_states[index - 1] +
-                                  calculate_odometry_from_controls(control[0], control[1],
-                                                                   initialized_states[index - 1]))
+        initialized_states.append(initialized_states[index] +
+                                  calculate_odometry_from_controls(control.item(0), control.item(1),
+                                                                   initialized_states[index]))
 
     return initialized_states
