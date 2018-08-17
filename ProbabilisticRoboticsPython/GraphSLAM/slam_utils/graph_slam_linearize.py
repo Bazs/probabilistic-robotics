@@ -44,19 +44,21 @@ def linearize_controls(xi, omega, R, controls, state_estimates):
     return xi, omega
 
 
-def linearize_measurements(xi, omega, H, measurements, state_estimates):
-    return
+def linearize_measurements(xi, omega, Q, measurements, state_estimates):
+    return xi, omega
 
 
-def graph_slam_linearize(controls, measurements, state_estimates, motion_error_covariance,
-                         measurement_error_covariance):
+def graph_slam_linearize(controls, measurements, state_estimates, correspondences, motion_error_covariance,
+                         measurement_noise_covariance):
     # The initial state is regarded as extremely reliable, i.e. high values in the information matrix omega
     omega = np.identity(3, dtype="float") * 100000
     xi = np.zeros((1, 1))
 
     # The motion noise covariance
     R = motion_error_covariance
-    H = measurement_error_covariance
+    Q = measurement_noise_covariance
 
     xi, omega = linearize_controls(xi, omega, R, controls, state_estimates)
-    linearize_measurements(xi, omega, H, measurements, state_estimates)
+    xi, omega = linearize_measurements(xi, omega, Q, measurements, state_estimates)
+
+    return xi, omega

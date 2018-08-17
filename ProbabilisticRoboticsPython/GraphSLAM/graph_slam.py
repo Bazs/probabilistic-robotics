@@ -49,10 +49,21 @@ if __name__ == "__main__":
 
     state_estimates = graph_slam_initialize(controls, state_t0=ground_truth_states[0])
 
-    graph_slam_linearize(controls, measurements, state_estimates, motion_error_covariance=np.identity(3),
-                         measurement_error_covariance=np.identity(3))
+    # Initialize unique correspondences for each observation for the first execution
+    correspondences = []
+    correspondence_idx = 0
 
-    plt.plot()
+    for measurements_for_state in measurements:
+        correspondences_for_state = list(range(correspondence_idx, correspondence_idx + len(measurements_for_state)))
+        correspondences.append(correspondences_for_state)
+        correspondence_idx = correspondence_idx + len(measurements_for_state)
+
+    xi, omega = graph_slam_linearize(controls, measurements, state_estimates, correspondences=correspondences,
+                                     motion_error_covariance=np.identity(3),
+                                     measurement_noise_covariance=np.identity(3))
+
+    plt.figure(figsize=[5, 10])
+    plt.subplot(211)
     plt.title("Ground truth map")
     plt.imshow(ground_truth_map, origin='lower')
 
@@ -61,5 +72,9 @@ if __name__ == "__main__":
 
     current_state = 1
     plot_measurements_for_state(ground_truth_states[current_state], measurements[current_state])
+
+    plt.subplot(212)
+    plt.title("Information matrix")
+    plt.imshow(omega)
 
     plt.show()
