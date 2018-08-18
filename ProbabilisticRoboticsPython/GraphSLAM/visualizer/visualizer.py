@@ -1,5 +1,5 @@
 from graph_slam import GraphSlamState, generate_ground_truth_map, generate_ground_truth_path, generate_measurements
-from slam_utils.plot_utils import plot_path
+from slam_utils.plot_utils import plot_path, plot_measurements_for_state
 from slam_parameters import *
 
 from PyQt5.QtWidgets import QDialog, QApplication, QPushButton, QVBoxLayout
@@ -114,17 +114,10 @@ class MainWindow(QDialog):
         self.remove_measurements_from_plot()
 
         measurements_for_state = self.slam_state.measurements[self.current_state_idx]
-        x_measurements = []
-        y_measurements = []
-
         current_state = self.slam_state.ground_truth_states[self.current_state_idx]
 
-        for measurement in measurements_for_state:
-            x_measurements.append(current_state[0] + math.cos(measurement[1]) * measurement[0])
-            y_measurements.append(current_state[1] + math.sin(measurement[1]) * measurement[0])
-
-        self.measurements_scatter = plt.scatter(x_measurements, y_measurements, c="red")
-        self.current_state_scatter = plt.scatter(current_state[0], current_state[1], s=100, c="orange")
+        self.measurements_scatter, self.current_state_scatter = \
+            plot_measurements_for_state(current_state, measurements_for_state)
 
     def previous_state(self):
         if self.current_state_idx == 0:

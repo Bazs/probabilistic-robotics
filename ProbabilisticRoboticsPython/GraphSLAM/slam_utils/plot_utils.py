@@ -18,8 +18,8 @@ def plot_measurements_for_state(state, measurements):
     y_measurements = []
 
     for measurement in measurements:
-        x_measurements.append(state[0] + math.cos(measurement[1]) * measurement[0])
-        y_measurements.append(state[1] + math.sin(measurement[1]) * measurement[0])
+        x_measurements.append(state[0] + math.cos(measurement[1] + state[2]) * measurement[0])
+        y_measurements.append(state[1] + math.sin(measurement[1] + state[2]) * measurement[0])
 
     state_scatter = plt.scatter(state[0], state[1], s=100, c='green')
     measurements_scatter = plt.scatter(x_measurements, y_measurements, c="red")
