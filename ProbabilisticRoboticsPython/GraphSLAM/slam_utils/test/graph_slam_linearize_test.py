@@ -34,7 +34,7 @@ class TestGraphSlamLinearize(unittest.TestCase):
             R = np.identity(3) * 0.00001
 
             # Calculate the information matrix and vector from linearized controls
-            xi, omega = linearize_controls(xi, omega, R, controls, state_estimates)
+            xi, omega = linearize_controls(xi, omega, R, state_estimates, controls)
 
             # Recover the moments representation of belief, i.e. the covariance and mean
             sigma = np.linalg.inv(omega)

@@ -18,7 +18,7 @@ def ensure_column_vector_length(vector, length):
     return vector
 
 
-def linearize_controls(xi, omega, R, controls, state_estimates):
+def linearize_controls(xi, omega, R, state_estimates, controls):
     for index, control in enumerate(controls[1:]):
         v = control.item(0)
         om = control.item(1)
@@ -44,12 +44,21 @@ def linearize_controls(xi, omega, R, controls, state_estimates):
     return xi, omega
 
 
-def linearize_measurements(xi, omega, Q, measurements, state_estimates):
-    return xi, omega
+def linearize_measurements(xi, omega, Q, state_estimates, measurements, correspondences, num_landmarks):
+    for step_index, measurements_for_state in enumerate(measurements):
+        for landmark_index, landmark_measurement in enumerate(measurements_for_state):
+            correspondence = correspondences[step_index][landmark_index]
+
+            # If this observation is not associated to any previously observed landmark
+            if num_landmarks <= correspondence:
+                pass
+                # TODO calculate initial landmark estimate from measurement
+
+    return xi, omega, num_landmarks
 
 
-def graph_slam_linearize(controls, measurements, state_estimates, correspondences, motion_error_covariance,
-                         measurement_noise_covariance):
+def graph_slam_linearize(state_estimates, controls, measurements, correspondences, num_landmarks,
+                         motion_error_covariance, measurement_noise_covariance):
     # The initial state is regarded as extremely reliable, i.e. high values in the information matrix omega
     omega = np.identity(3, dtype="float") * 100000
     xi = np.zeros((1, 1))
@@ -58,7 +67,8 @@ def graph_slam_linearize(controls, measurements, state_estimates, correspondence
     R = motion_error_covariance
     Q = measurement_noise_covariance
 
-    xi, omega = linearize_controls(xi, omega, R, controls, state_estimates)
-    xi, omega = linearize_measurements(xi, omega, Q, measurements, state_estimates)
+    xi, omega = linearize_controls(xi, omega, R, state_estimates, controls)
+    xi, omega, num_landmarks = linearize_measurements(xi, omega, Q, state_estimates, measurements, correspondences,
+                                                      num_landmarks)
 
-    return xi, omega
+    return xi, omega, num_landmarks

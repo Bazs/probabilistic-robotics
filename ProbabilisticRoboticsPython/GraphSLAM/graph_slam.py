@@ -58,9 +58,10 @@ if __name__ == "__main__":
         correspondences.append(correspondences_for_state)
         correspondence_idx = correspondence_idx + len(measurements_for_state)
 
-    xi, omega = graph_slam_linearize(controls, measurements, state_estimates, correspondences=correspondences,
-                                     motion_error_covariance=np.identity(3),
-                                     measurement_noise_covariance=np.identity(3))
+    xi, omega, num_landmarks = \
+        graph_slam_linearize(state_estimates=state_estimates, controls=controls, measurements=measurements,
+                             correspondences=correspondences, num_landmarks=0, motion_error_covariance=np.identity(3),
+                             measurement_noise_covariance=np.identity(3))
 
     plt.figure(figsize=[5, 10])
     plt.subplot(211)

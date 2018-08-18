@@ -20,6 +20,7 @@ def calculate_measurement_vector_for_detection(ground_truth_state, detected_land
     y_state = ground_truth_state[1]
 
     phi = math.atan2(y_landmark - y_state, x_landmark - x_state)
+    # TODO transform the measurement into the frame of the ground truth state
 
     return np.array([[detected_landmark_and_distance[1],
                     phi,
