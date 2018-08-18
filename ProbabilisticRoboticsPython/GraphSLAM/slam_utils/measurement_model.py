@@ -6,6 +6,19 @@ import math
 import random as rnd
 
 
+def add_measurement_to_pose(pose, measurement):
+    """
+    Returns the position acquired by applying a [range, heading] measurement to a [x, y, heading] pose.
+    :param pose: A pose in the form of [x, y, heading(rad)].
+    :param measurement: A measurements in the form of [range, heading(rad)]
+    :return: The resulting position as a (x, y) tuple.
+    """
+    x = pose[0] + math.cos(measurement[1] + pose[2]) * measurement[0]
+    y = pose[1] + math.sin(measurement[1] + pose[2]) * measurement[0]
+
+    return x, y
+
+
 def get_landmarks_and_distances_in_range(ground_truth_state, landmarks, max_sensing_range):
     landmark_distances = [np.linalg.norm(landmark[:2] - ground_truth_state[:2]) for landmark in landmarks]
     return [(landmark, landmark_distances[index]) for index, landmark in

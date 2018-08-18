@@ -63,8 +63,8 @@ if __name__ == "__main__":
                              correspondences=correspondences, num_landmarks=0, motion_error_covariance=np.identity(3),
                              measurement_noise_covariance=np.identity(3))
 
-    plt.figure(figsize=[5, 10])
-    plt.subplot(211)
+    plt.figure(figsize=[10, 5])
+    plt.subplot(121)
     plt.title("Ground truth map")
     plt.imshow(ground_truth_map, origin='lower')
 
@@ -74,7 +74,7 @@ if __name__ == "__main__":
     current_state = 1
     plot_measurements_for_state(ground_truth_states[current_state], measurements[current_state])
 
-    plt.subplot(212)
+    plt.subplot(122)
     plt.title("Information matrix")
     plt.imshow(omega)
 

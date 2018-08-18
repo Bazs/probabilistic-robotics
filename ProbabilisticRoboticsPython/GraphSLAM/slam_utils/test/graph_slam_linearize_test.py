@@ -10,7 +10,6 @@ import unittest
 class TestGraphSlamLinearize(unittest.TestCase):
 
     def test_linearize_controls_round_trip(self):
-
         # Test a straight movement, and circular movement
         test_controls = [
             [np.array([[1, 0]]).T] * 5,
@@ -37,6 +36,7 @@ class TestGraphSlamLinearize(unittest.TestCase):
             xi, omega = linearize_controls(xi, omega, R, state_estimates, controls)
 
             # Recover the moments representation of belief, i.e. the covariance and mean
+            # TODO use GraphSLAM solve here, after it's implemented
             sigma = np.linalg.inv(omega)
             mu = np.dot(sigma, xi)
 
