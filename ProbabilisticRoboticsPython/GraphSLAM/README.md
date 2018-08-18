@@ -7,8 +7,9 @@ A bare-bones GraphSLAM implementation based on Chapter 11 of [1]. Mostly for sel
 ### Implemented functionality
 
 The application can:
-* Generate a simple world with point-like landmarks
-* Generate a random ego-path using a constant turn rate and velocity motion model
+* Generate a simple world with point-like landmarks.
+* Generate a random ego-path using a constant turn rate and velocity motion model.
 * Generate landmark observations for each ego state along the path using a simple stochastic sensor model.
+* Initialize the information vector and matrix, and enrich it with the information from controls and measurements.
 
 [1]: Probabilistic Robotics, Thrun, S. and Burgard, W. and Fox, D. and Arkin, R.C. 2005 MIT Press
