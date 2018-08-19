@@ -1,9 +1,19 @@
+from slam_utils.angle_utils import normalize_angle_pi_minus_pi
 from slam_utils.ctrv_motion_model import calculate_odometry_from_controls, calculate_jacobian_from_controls
 from slam_utils.measurement_model import add_measurement_to_pose
 
 import numpy as np
 
 import math
+import sys
+
+
+def initialize_xi_omega():
+    # Initial state is extremely reliable, i.e. high values in the information matrix
+    omega = np.identity(3, dtype="float") * sys.float_info.max
+    xi = np.zeros((1, 1))
+
+    return xi, omega
 
 
 def ensure_square_matrix_size(matrix, size):
@@ -47,7 +57,14 @@ def linearize_controls(xi, omega, R, state_estimates, controls):
     return xi, omega
 
 
-def linearize_measurements(xi, omega, Q, state_estimates, measurements, correspondences, num_landmarks):
+def get_delta_q(landmark_estimate, current_state):
+    delta = landmark_estimate[:2] - current_state[:2]
+    q = float(np.dot(delta.T, delta))
+
+    return delta, q
+
+
+def linearize_measurements(xi, omega, Q, state_estimates, landmark_estimates, measurements, correspondences):
     for step_index, measurements_for_state in enumerate(measurements):
 
         current_state = state_estimates[step_index]
@@ -59,22 +76,29 @@ def linearize_measurements(xi, omega, Q, state_estimates, measurements, correspo
         for landmark_index, landmark_measurement in enumerate(measurements_for_state):
             correspondence = correspondences[step_index][landmark_index]
 
+            # The number of landmarks, for which there already exists an estimate
+            num_landmarks = len(landmark_estimates)
+
             # Precalculate indices into omega corresponding to the measurement
             measurement_start_index = omega.shape[0] + (correspondence - num_landmarks) * 3
             measurement_end_index = measurement_start_index + 3
 
             # If this observation is not associated to any previously observed landmark
             if num_landmarks <= correspondence:
-                num_landmarks = num_landmarks + 1
-
                 x, y = add_measurement_to_pose(current_state, landmark_measurement)
                 landmark_estimate = np.array([[x, y, landmark_measurement.item(2)]]).T
+
+                landmark_estimates[correspondence] = landmark_estimate
+
+                delta, q = get_delta_q(landmark_estimate, current_state)
                 expected_measurement = landmark_measurement
-                delta = landmark_estimate[:2] - current_state[:2]
-                q = float(np.dot(delta.T, delta))
             else:
-                # TODO implement the case, when the measurement corresponds to an already existing landmark estimate
-                pass
+                landmark_estimate = landmark_estimates[correspondence]
+                delta, q = get_delta_q(landmark_estimate, current_state)
+                expected_landmark_heading = math.atan2(delta[1], delta[0]) - current_state[2]
+                expected_landmark_heading = normalize_angle_pi_minus_pi(expected_landmark_heading)
+                expected_measurement = np.array([[
+                    math.sqrt(q), expected_landmark_heading, landmark_estimate.item(2)]]).T
 
             q_root = math.sqrt(q)
             delta_x = float(delta[0])
@@ -113,22 +137,22 @@ def linearize_measurements(xi, omega, Q, state_estimates, measurements, correspo
             # Add the lower half to the landmark in xi
             xi[measurement_start_index:measurement_end_index] = xi_xt_mj[3:]
 
-    return xi, omega, num_landmarks
+    return xi, omega, landmark_estimates
 
 
-def graph_slam_linearize(state_estimates, controls, measurements, correspondences, num_landmarks,
+def graph_slam_linearize(state_estimates, landmark_estimates, controls, measurements, correspondences,
                          motion_error_covariance, measurement_noise_covariance):
     """
     Implements the GraphSLAM_linearize algorithm from Probabilistic Robotics Chapter 11.3.
 
+    :param landmark_estimates: A dictionary mapping from correspondence index to a landmark estimate in the form of
+        [x, y, signature].T.
     :param state_estimates: The current ego state estimates, list of [x, y, heading].T elements.
     :param controls: List of [v, omega].T controls, one for each element in state_estimates.
     :param measurements: A list of state_estimates length, each element being a list of [range, heading, classifier].T
         measurements.
     :param correspondences: A list of lists, same dimension as measurements. Each element is to the index of the real
         landmark, to which the element of measurements in the same position corresponds to.
-    :param num_landmarks: The number of different landmarks currently being estimated. Correspondence values act as
-        indices into this range.
     :param motion_error_covariance: The covariance of the motion error, diagonal elements are variances for
         [x, y, heading].
     :param measurement_noise_covariance: The covariance of the measurement noise, diagonal elements are variances for
@@ -136,16 +160,14 @@ def graph_slam_linearize(state_estimates, controls, measurements, correspondence
     :return: The information vector xi, the information vector omega, and the updated number of landmarks being
         estimated tracked in them.
     """
-    # The initial state is regarded as extremely reliable, i.e. high values in the information matrix omega
-    omega = np.identity(3, dtype="float") * 100000
-    xi = np.zeros((1, 1))
+    xi, omega = initialize_xi_omega()
 
     # The motion noise covariance
     R = motion_error_covariance
     Q = measurement_noise_covariance
 
     xi, omega = linearize_controls(xi, omega, R, state_estimates, controls)
-    xi, omega, num_landmarks = linearize_measurements(xi, omega, Q, state_estimates, measurements, correspondences,
-                                                      num_landmarks)
+    xi, omega, landmark_estimates = linearize_measurements(xi, omega, Q, state_estimates, landmark_estimates,
+                                                           measurements, correspondences)
 
-    return xi, omega, num_landmarks
+    return xi, omega, landmark_estimates
