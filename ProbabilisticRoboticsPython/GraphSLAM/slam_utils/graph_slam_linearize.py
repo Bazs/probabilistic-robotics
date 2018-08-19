@@ -89,20 +89,29 @@ def linearize_measurements(xi, omega, Q, state_estimates, measurements, correspo
             Ht_dot_Q_inv = np.dot(H.T, np.linalg.inv(Q))
             omega_xt_mj = np.dot(Ht_dot_Q_inv, H)
 
-            # TODO calculate xi_xt_mj and add it to xi
+            state_and_landmark = np.concatenate((current_state, landmark_estimate))
+            xi_xt_mj = np.dot(Ht_dot_Q_inv, (landmark_measurement - expected_measurement
+                                             + np.dot(H, state_and_landmark)))
 
             omega = ensure_square_matrix_size(omega, measurement_end_index)
 
-            # Add the top left submatrix to the state
+            # Add the top left submatrix to the state in omega
             omega[state_start_index:state_end_index, state_start_index:state_end_index] = omega_xt_mj[0:3, 0:3]
             # Add the bottom right submatrix to the measurement
             omega[measurement_start_index:measurement_end_index, measurement_start_index:measurement_end_index] = \
                 omega_xt_mj[3:, 3:]
-
+            # Add the off-diagonal submatrices to between the state and the measurements
             omega[measurement_start_index:measurement_end_index, state_start_index:state_end_index] = \
                 omega_xt_mj[3:, 0:3]
             omega[state_start_index:state_end_index, measurement_start_index:measurement_end_index] = \
                 omega_xt_mj[0:3, 3:]
+
+            xi = ensure_column_vector_length(xi, measurement_end_index)
+
+            # Add the upper half of the new information to the state in xi
+            xi[state_start_index:state_end_index] = xi_xt_mj[:3]
+            # Add the lower half to the landmark in xi
+            xi[measurement_start_index:measurement_end_index] = xi_xt_mj[3:]
 
     return xi, omega, num_landmarks
 

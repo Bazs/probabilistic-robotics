@@ -16,7 +16,7 @@ def add_measurement_to_pose(pose, measurement):
     x = pose[0] + math.cos(measurement[1] + pose[2]) * measurement[0]
     y = pose[1] + math.sin(measurement[1] + pose[2]) * measurement[0]
 
-    return x, y
+    return float(x), float(y)
 
 
 def get_landmarks_and_distances_in_range(ground_truth_state, landmarks, max_sensing_range):
