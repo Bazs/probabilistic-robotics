@@ -78,6 +78,7 @@ if __name__ == "__main__":
 
     plt.subplot(122)
     plt.title("Information matrix")
-    plt.imshow(omega)
+    omega_binary = omega > 0
+    plt.imshow(omega_binary)
 
     plt.show()
