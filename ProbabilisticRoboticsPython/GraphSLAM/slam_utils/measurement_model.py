@@ -19,6 +19,23 @@ def add_measurement_to_pose(pose, measurement):
     return float(x), float(y)
 
 
+def calculate_landmark_distance(pose, landmark):
+    return np.linalg.norm(landmark[:2] - pose[:2])
+
+
+def calculate_landmark_heading(pose, landmark):
+    x_landmark = landmark[0]
+    y_landmark = landmark[1]
+    x_state = pose[0]
+    y_state = pose[1]
+
+    phi = math.atan2(y_landmark - y_state, x_landmark - x_state)
+    phi = phi - pose[2]
+    phi = normalize_angle_pi_minus_pi(phi)
+
+    return phi
+
+
 def get_landmarks_and_distances_in_range(ground_truth_state, landmarks, max_sensing_range):
     landmark_distances = [np.linalg.norm(landmark[:2] - ground_truth_state[:2]) for landmark in landmarks]
     return [(landmark, landmark_distances[index]) for index, landmark in
@@ -27,16 +44,8 @@ def get_landmarks_and_distances_in_range(ground_truth_state, landmarks, max_sens
 
 
 def calculate_measurement_vector_for_detection(ground_truth_state, detected_landmark_and_distance):
-    x_landmark = detected_landmark_and_distance[0][0]
-    y_landmark = detected_landmark_and_distance[0][1]
-    x_state = ground_truth_state[0]
-    y_state = ground_truth_state[1]
-
-    phi = math.atan2(y_landmark - y_state, x_landmark - x_state)
-    phi = phi - ground_truth_state[2]
-
     return np.array([[detected_landmark_and_distance[1],
-                    phi,
+                    calculate_landmark_heading(ground_truth_state, detected_landmark_and_distance[0]),
                     detected_landmark_and_distance[0][2]]]).T
 
 

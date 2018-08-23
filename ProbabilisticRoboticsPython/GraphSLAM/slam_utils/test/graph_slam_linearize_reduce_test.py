@@ -1,7 +1,8 @@
 from slam_utils.ctrv_motion_model import calculate_odometry_from_controls
 from slam_utils.graph_slam_linearize import initialize_xi_omega, graph_slam_linearize, linearize_controls
 from slam_utils.graph_slam_reduce import graph_slam_reduce
-from slam_utils.measurement_model import add_measurement_to_pose
+from slam_utils.measurement_model import add_measurement_to_pose, calculate_landmark_distance, \
+    calculate_landmark_heading
 
 import numpy as np
 
@@ -82,16 +83,18 @@ class TestGraphSlamLinearizeReduce(unittest.TestCase):
         return measurements, correspondences, expected_landmarks
 
     @staticmethod
-    def generate_measurements_of_single_landmark(state_estimates, controls):
+    def generate_measurements_of_single_landmark(state_estimates):
         measurements = []
         correspondences = []
 
-        measurement_distance = 10
+        landmark = np.array([[10, 0, 0]]).T
 
         for index, state_estimate in enumerate(state_estimates):
-            measurements.append([np.array([[measurement_distance, 0, 0]]).T])
+            distance = calculate_landmark_distance(state_estimate, landmark)
+            heading = calculate_landmark_heading(state_estimate, landmark)
+
+            measurements.append([np.array([[distance, heading, 0]]).T])
             correspondences.append([0])
-            measurement_distance = measurement_distance - controls[index].item(0)
 
         x, y = add_measurement_to_pose(state_estimates[0], measurements[0][0])
         expected_landmark = np.array([[x, y, measurements[0][0].item(2)]]).T
@@ -126,10 +129,9 @@ class TestGraphSlamLinearizeReduce(unittest.TestCase):
 
     def test_linearize_no_correspondence_round_trip(self):
         """
-        Performs GraphSLAM linearize on measurements and controls, then reduces the dimensionality of the information
-        representation via GraphSLAM reduce. Finally, recovers the state means, and checks that they are according to
-        the expected values calculated from the controls in a noise-free world. Each input measurement corresponds to
-        a different landmark.
+        Performs GraphSLAM linearize on measurements and controls, then recovers the state means, and checks that they
+        are according to the expected values calculated from the controls in a noise-free world. Each input measurement
+        corresponds to a different landmark.
         """
 
         for test_index, controls in enumerate(self.test_controls):
@@ -153,32 +155,31 @@ class TestGraphSlamLinearizeReduce(unittest.TestCase):
             self.assert_mu_close_to_ground_truth_states(mu, state_estimates)
             self.assert_mu_close_to_ground_truth_landmarks(mu, ground_truth_landmarks)
 
-    # TODO generate measurements, which correspond to the same landmark even on an circular path
-    # def test_linearize_with_correspondence_round_trip(self):
-    #     """
-    #     The test execution follows the description of
-    #     "meth:`slam_utils.test.TestGraphSlamLinearizeReduce.test_linearize_no_correspondence_round_trip`,
-    #     with the exception, that now every input measurement corresponds to the same landmark.
-    #     """
-    #     for test_index, controls in enumerate(self.test_controls):
-    #         state_estimates = self.test_state_estimates[test_index]
-    #
-    #         measurements, correspondences, expected_landmarks \
-    #             = self.generate_measurements_of_single_landmark(state_estimates, controls)
-    #
-    #         landmark_estimates = dict()
-    #
-    #         xi, omega, landmark_estimates = graph_slam_linearize(state_estimates, landmark_estimates, controls,
-    #                                                              measurements, correspondences, self.R, self.Q)
-    #
-    #         num_landmarks = 1
-    #         expected_information_size = (len(state_estimates) + num_landmarks) * 3
-    #         self.assert_right_information_size(expected_information_size, xi, omega)
-    #         self.assertEqual(num_landmarks, len(landmark_estimates))
-    #
-    #         mu, sigma = self.solve_from_information(xi, omega)
-    #
-    #         self.assert_mu_close_to_ground_truth_states(mu, state_estimates)
+    def test_linearize_with_correspondence_round_trip(self):
+        """
+        The test execution follows the description of
+        "meth:`slam_utils.test.TestGraphSlamLinearizeReduce.test_linearize_no_correspondence_round_trip`,
+        with the exception, that now every input measurement corresponds to the same landmark.
+        """
+        for test_index, controls in enumerate(self.test_controls):
+            state_estimates = self.test_state_estimates[test_index]
+
+            measurements, correspondences, expected_landmarks \
+                = self.generate_measurements_of_single_landmark(state_estimates)
+
+            landmark_estimates = dict()
+
+            xi, omega, landmark_estimates = graph_slam_linearize(state_estimates, landmark_estimates, controls,
+                                                                 measurements, correspondences, self.R, self.Q)
+
+            num_landmarks = 1
+            expected_information_size = (len(state_estimates) + num_landmarks) * 3
+            self.assert_right_information_size(expected_information_size, xi, omega)
+            self.assertEqual(num_landmarks, len(landmark_estimates))
+
+            mu, sigma = self.solve_from_information(xi, omega)
+
+            self.assert_mu_close_to_ground_truth_states(mu, state_estimates)
 
     def test_linearize_reduce_no_correspondence_round_trip(self):
         """
@@ -187,38 +188,24 @@ class TestGraphSlamLinearizeReduce(unittest.TestCase):
         the expected values calculated from the controls in a noise-free world. Each input measurement corresponds to
         a different landmark.
         """
-        controls = [np.array([[1, 0]]).T] * 4
-        state_estimates = self.calculate_states_from_controls(np.array([[0, 0, 0]]).T, controls)
+        for test_index, controls in enumerate(self.test_controls):
+            state_estimates = self.test_state_estimates[test_index]
 
-        measurements = []
-        correspondences = []
+            measurements, correspondences, ground_truth_landmarks = \
+                self.generate_single_unique_measurements_for_controls(state_estimates)
 
-        for index in range(len(controls)):
-            measurements.append([np.array([[1, math.pi / 2, 0]]).T])
-            correspondences.append([index])
+            landmark_estimates = dict()
 
-        # Negligible motion error covariance
-        R = np.identity(3) * 0.00001
-        # Negligible measurement noise covariance
-        Q = np.identity(3) * 0.00001
+            xi, omega, landmark_estimates = graph_slam_linearize(state_estimates, landmark_estimates, controls,
+                                                                 measurements, correspondences, self.R, self.Q)
+            xi_reduced, omega_reduced = graph_slam_reduce(xi, omega, landmark_estimates, correspondences)
 
-        landmark_estimates = dict()
+            expected_information_size = len(state_estimates) * 3
+            self.assert_right_information_size(expected_information_size, xi_reduced, omega_reduced)
 
-        xi, omega, landmark_estimates = graph_slam_linearize(state_estimates, landmark_estimates, controls,
-                                                             measurements, correspondences, R, Q)
+            mu, sigma = self.solve_from_information(xi_reduced, omega_reduced)
 
-        xi_reduced, omega_reduced = graph_slam_reduce(xi, omega, landmark_estimates, correspondences)
-
-        num_landmarks = len(state_estimates)
-        expected_information_size = (len(state_estimates) + num_landmarks) * 3
-        self.assert_right_information_size(expected_information_size, xi, omega)
-
-        self.assertEqual(num_landmarks, len(landmark_estimates))
-
-        mu, sigma = self.solve_from_information(xi_reduced, omega_reduced)
-
-        # Assert that the recovered mean is indistinguishable from the input state estimates
-        self.assert_mu_close_to_ground_truth_states(mu, state_estimates)
+            self.assert_mu_close_to_ground_truth_states(mu, state_estimates)
 
     def test_linearize_reduce_with_correspondence_round_trip(self):
         """
@@ -226,39 +213,24 @@ class TestGraphSlamLinearizeReduce(unittest.TestCase):
         "meth:`slam_utils.test.TestGraphSlamLinearizeReduce.test_linearize_reduce_no_correspondence_round_trip`,
         with the exception, that now every input measurement corresponds to the same landmark.
         """
-        controls = [np.array([[1, 0]]).T] * 4
-        state_estimates = self.calculate_states_from_controls(np.array([[0, 0, 0]]).T, controls)
+        for test_index, controls in enumerate(self.test_controls):
+            state_estimates = self.test_state_estimates[test_index]
 
-        measurements = []
-        correspondences = []
+            measurements, correspondences, expected_landmarks \
+                = self.generate_measurements_of_single_landmark(state_estimates)
 
-        measurement_distance = 10
+            landmark_estimates = dict()
 
-        for index in range(len(controls)):
-            measurements.append([np.array([[measurement_distance, 0, 0]]).T])
-            correspondences.append([0])
-            measurement_distance = measurement_distance - controls[index].item(0)
+            xi, omega, landmark_estimates = graph_slam_linearize(state_estimates, landmark_estimates, controls,
+                                                                 measurements, correspondences, self.R, self.Q)
+            xi_reduced, omega_reduced = graph_slam_reduce(xi, omega, landmark_estimates, correspondences)
 
-        # Negligible motion error covariance
-        R = np.identity(3) * 0.00001
-        # Negligible measurement noise covariance
-        Q = np.identity(3) * 0.00001
+            expected_information_size = len(state_estimates) * 3
+            self.assert_right_information_size(expected_information_size, xi_reduced, omega_reduced)
 
-        landmark_estimates = dict()
+            mu, sigma = self.solve_from_information(xi_reduced, omega_reduced)
 
-        xi, omega, landmark_estimates = graph_slam_linearize(state_estimates, landmark_estimates, controls,
-                                                             measurements, correspondences, R, Q)
-        xi_reduced, omega_reduced = graph_slam_reduce(xi, omega, landmark_estimates, correspondences)
-
-        num_landmarks = 1
-        expected_information_size = (len(state_estimates) + num_landmarks) * 3
-        self.assert_right_information_size(expected_information_size, xi, omega)
-
-        self.assertEqual(num_landmarks, len(landmark_estimates))
-
-        mu, sigma = self.solve_from_information(xi_reduced, omega_reduced)
-
-        self.assert_mu_close_to_ground_truth_states(mu, state_estimates)
+            self.assert_mu_close_to_ground_truth_states(mu, state_estimates)
 
 
 if __name__ == "__main__":
