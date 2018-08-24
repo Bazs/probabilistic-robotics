@@ -198,7 +198,7 @@ class TestGraphSlamLinearizeReduce(unittest.TestCase):
 
             xi, omega, landmark_estimates = graph_slam_linearize(state_estimates, landmark_estimates, controls,
                                                                  measurements, correspondences, self.R, self.Q)
-            xi_reduced, omega_reduced = graph_slam_reduce(xi, omega, landmark_estimates, correspondences)
+            xi_reduced, omega_reduced = graph_slam_reduce(xi, omega, landmark_estimates)
 
             expected_information_size = len(state_estimates) * 3
             self.assert_right_information_size(expected_information_size, xi_reduced, omega_reduced)
@@ -223,7 +223,7 @@ class TestGraphSlamLinearizeReduce(unittest.TestCase):
 
             xi, omega, landmark_estimates = graph_slam_linearize(state_estimates, landmark_estimates, controls,
                                                                  measurements, correspondences, self.R, self.Q)
-            xi_reduced, omega_reduced = graph_slam_reduce(xi, omega, landmark_estimates, correspondences)
+            xi_reduced, omega_reduced = graph_slam_reduce(xi, omega, landmark_estimates)
 
             expected_information_size = len(state_estimates) * 3
             self.assert_right_information_size(expected_information_size, xi_reduced, omega_reduced)

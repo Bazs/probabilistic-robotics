@@ -1,6 +1,7 @@
 from slam_parameters import *
 from slam_utils.graph_slam_initialize import graph_slam_initialize
 from slam_utils.graph_slam_linearize import graph_slam_linearize
+from slam_utils.graph_slam_reduce import graph_slam_reduce
 from slam_utils.map_generator import generate_ground_truth_map
 from slam_utils.measurement_model import generate_measurements
 from slam_utils.path_generator import generate_ground_truth_path
@@ -64,9 +65,10 @@ if __name__ == "__main__":
         graph_slam_linearize(state_estimates=state_estimates, landmark_estimates=landmark_estimates, controls=controls,
                              measurements=measurements, correspondences=correspondences,
                              motion_error_covariance=np.identity(3), measurement_noise_covariance=np.identity(3))
+    xi_reduced, omega_reduced = graph_slam_reduce(xi, omega, landmark_estimates)
 
     plt.figure(figsize=[10, 5])
-    plt.subplot(121)
+    plt.subplot(131)
     plt.title("Ground truth map")
     plt.imshow(ground_truth_map, origin='lower')
 
@@ -76,9 +78,14 @@ if __name__ == "__main__":
     current_state = 1
     plot_measurements_for_state(ground_truth_states[current_state], measurements[current_state])
 
-    plt.subplot(122)
+    plt.subplot(132)
     plt.title("Information matrix")
-    omega_binary = omega > 0
+    omega_binary = omega != 0
     plt.imshow(omega_binary)
+
+    plt.subplot(133)
+    plt.title("Reduced information matrix")
+    omega_reduced_binary = omega_reduced != 0
+    plt.imshow(omega_reduced_binary)
 
     plt.show()
