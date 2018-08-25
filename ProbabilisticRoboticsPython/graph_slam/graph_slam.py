@@ -1,13 +1,11 @@
 from slam_parameters import *
-from slam_utils.graph_slam_initialize import graph_slam_initialize
-from slam_utils.graph_slam_linearize import graph_slam_linearize
-from slam_utils.graph_slam_reduce import graph_slam_reduce
-from slam_utils.map_generator import generate_ground_truth_map
-from slam_utils.measurement_model import generate_measurements
-from slam_utils.path_generator import generate_ground_truth_path
-from slam_utils.plot_utils import plot_path, plot_measurements_for_state
-
-from slam_utils.ctrv_motion_model import calculate_odometry_from_controls, calculate_jacobian_from_controls
+from core.initialize import graph_slam_initialize
+from core.linearize import graph_slam_linearize
+from core.reduce import graph_slam_reduce
+from utils.map_generator import generate_ground_truth_map
+from utils.measurement_model import generate_measurements
+from utils.path_generator import generate_ground_truth_path
+from utils.plot_utils import plot_path, plot_measurements_for_state
 
 import matplotlib.pyplot as plt
 import numpy as np

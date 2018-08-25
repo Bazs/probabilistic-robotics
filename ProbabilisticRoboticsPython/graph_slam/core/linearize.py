@@ -1,6 +1,6 @@
-from slam_utils.angle_utils import normalize_angle_pi_minus_pi
-from slam_utils.ctrv_motion_model import calculate_odometry_from_controls, calculate_jacobian_from_controls
-from slam_utils.measurement_model import add_measurement_to_pose
+from utils.angle_utils import normalize_angle_pi_minus_pi
+from utils.ctrv_motion_model import calculate_odometry_from_controls, calculate_jacobian_from_controls
+from utils.measurement_model import add_measurement_to_pose
 
 import numpy as np
 

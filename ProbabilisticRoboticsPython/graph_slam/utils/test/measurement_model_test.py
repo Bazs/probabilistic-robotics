@@ -1,4 +1,4 @@
-from slam_utils.measurement_model import get_landmarks_and_distances_in_range, \
+from utils.measurement_model import get_landmarks_and_distances_in_range, \
     calculate_measurement_vector_for_detection
 
 import numpy as np

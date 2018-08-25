@@ -1,9 +1,8 @@
-from slam_utils.ctrv_motion_model import calculate_odometry_from_controls
-from slam_utils.graph_slam_linearize import initialize_xi_omega, graph_slam_linearize, linearize_controls
-from slam_utils.graph_slam_reduce import graph_slam_reduce
-from slam_utils.graph_slam_solve import graph_slam_solve
-from slam_utils.measurement_model import add_measurement_to_pose, calculate_landmark_distance, \
-    calculate_landmark_heading
+from utils.ctrv_motion_model import calculate_odometry_from_controls
+from core.linearize import initialize_xi_omega, graph_slam_linearize, linearize_controls
+from core.reduce import graph_slam_reduce
+from core.solve import graph_slam_solve
+from utils.measurement_model import add_measurement_to_pose, calculate_landmark_distance, calculate_landmark_heading
 
 import numpy as np
 
@@ -163,7 +162,7 @@ class TestGraphSlamLinearizeReduce(unittest.TestCase):
     def test_linearize_with_correspondence_round_trip(self):
         """
         The test execution follows the description of
-        "meth:`slam_utils.test.TestGraphSlamLinearizeReduce.test_linearize_no_correspondence_round_trip`,
+        "meth:`core.test.TestGraphSlamLinearizeReduce.test_linearize_no_correspondence_round_trip`,
         with the exception, that now every input measurement corresponds to the same landmark.
         """
         for test_index, controls in enumerate(self.test_controls):
@@ -215,7 +214,7 @@ class TestGraphSlamLinearizeReduce(unittest.TestCase):
     def test_linearize_reduce_with_correspondence_round_trip(self):
         """
         The test execution follows the description of
-        "meth:`slam_utils.test.TestGraphSlamLinearizeReduce.test_linearize_reduce_no_correspondence_round_trip`,
+        "meth:`core.test.TestGraphSlamLinearizeReduce.test_linearize_reduce_no_correspondence_round_trip`,
         with the exception, that now every input measurement corresponds to the same landmark.
         """
         for test_index, controls in enumerate(self.test_controls):
@@ -261,7 +260,7 @@ class TestGraphSlamLinearizeReduce(unittest.TestCase):
     def test_graph_slam_full_with_correspondence_round_trip(self):
         """
         The test execution follows the description of
-        "meth:`slam_utils.test.TestGraphSlamLinearizeReduce.test_graph_slam_full_no_correspondence_round_trip`,
+        "meth:`core.test.TestGraphSlamLinearizeReduce.test_graph_slam_full_no_correspondence_round_trip`,
         with the exception, that now every input measurement corresponds to the same landmark.
         """
         for test_index, controls in enumerate(self.test_controls):

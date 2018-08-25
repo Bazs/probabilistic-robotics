@@ -1,4 +1,4 @@
-from slam_utils.ctrv_motion_model import calculate_odometry_from_controls
+from utils.ctrv_motion_model import calculate_odometry_from_controls
 
 
 def graph_slam_initialize(controls, state_t0):

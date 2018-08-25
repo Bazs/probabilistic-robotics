@@ -1,4 +1,4 @@
-from slam_utils.measurement_model import add_measurement_to_pose
+from utils.measurement_model import add_measurement_to_pose
 
 import matplotlib.pyplot as plt
 

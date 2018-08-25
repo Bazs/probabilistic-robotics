@@ -1,5 +1,6 @@
-from graph_slam import GraphSlamState, generate_ground_truth_map, generate_ground_truth_path, generate_measurements
-from slam_utils.plot_utils import plot_path, plot_measurements_for_state
+from graph_slam.graph_slam import GraphSlamState, generate_ground_truth_map, generate_ground_truth_path, \
+    generate_measurements
+from utils.plot_utils import plot_path, plot_measurements_for_state
 from slam_parameters import *
 
 from PyQt5.QtWidgets import QDialog, QApplication, QPushButton, QVBoxLayout
